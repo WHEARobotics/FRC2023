@@ -1,8 +1,8 @@
 # Developer Configuration
 
-Sharkbots uses Python for programming. Because Python has a very large community and because it's very easy to add new libraries to a python environment, it's very easy for developers to end up with a lot of complex dependencies that end up causing trouble on the actual RoboRio or outboard processor. To (help) fight that, please use the `conda` package manager to create a "virtual environment." Everyone will share the same libraries and be able to to recreate the virtual environment quickly.
+Sharkbots uses Python for programming. Because Python has a very large community and because it's very easy to add new libraries to a python environment, it's very easy for developers to end up with a lot of complex dependencies that end up causing trouble on the actual RoboRio or outboard processor. To (help) fight that, please use the **conda** package manager to create a "virtual environment." Everyone will share the same libraries and be able to to recreate the virtual environment quickly.
 
-Since Linux is the operating system of the RoboRio and most outboard coprocessors (Raspberry Pi, Jetson, etc.), it's a tiny bit more convenient as the system you use in a terminal (command-line) sessions. If you are comfortable with Linux and use Windows, installing the [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/install) may be worth while. It's not necessary, though. If you are comfortable with Windows' native "Command Prompt" or "Windows Powershell" command-lines, they're more than fine. 
+**NOTE**: At the moment, I've had difficulty installing the Python wpilib into Window's implementation of Linux (Windows Subsystem for Linux). Until that's figured out, if you're using a Windows machine, use the **Command prompt** or **Windows Powershell** terminals to work. 
 
 ## Clone this repo 
 
@@ -35,7 +35,7 @@ This program will take a minute or two to run. It will download and install the 
 
 **Note**: This involves a lot of very complex behind-the-scenes stuff. Often, "recreating the dev environment" is one of the biggest challenges to getting started in a programming project. Don't be surprised if you need help from a mentor at this stage. Just ask!
 
-**Note**: It appears that the current **wpilib** library is incompatible with Apple's M1 and M2 Macs. You'll likely need to use a Windows-based machine or an older Mac to get this to work. 
+**Note**: On Windows Subsystem for Linux (WSL), installing **wpilib-util** fails trying to find **std::span**. Larry reckons this indicates that WSL is using an older **gcc**. See https://github.com/WHEARobotics/FRC2023/issues/2
 
 ## IMPORTANT! Activate the **frc** environment before work!
 
