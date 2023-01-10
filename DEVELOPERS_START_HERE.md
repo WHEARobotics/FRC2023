@@ -27,17 +27,11 @@ The **requirements.txt** file defines the Python libraries used in the common de
 
 Run:
 
-    conda create -n frc -r requirements.txt python=3.11
+    conda create -n frc python=3.11
 
-You are asking the **conda** program to create an environment. The name of the environment is "frc" (`-n frc`). The libraries used by the environment are listed in the file **requirements.txt** (`-r requirements.txt`). The version of Python we will use is Python 3.11 (`python=3.11`).
+You are asking the **conda** program to create an environment. The name of the environment is "frc" (`-n frc`). The version of Python we will use is Python 3.11 (`python=3.11`).
 
-This program will take a minute or two to run. It will download and install the appropriate Python runtime and tools and all the listed packages. We will undoubtedly decide to include some other packages. When we do so, we'll update **requirements.txt** and save it so we don't struggle with "works on my machine!" errors. (There are _always_ WOMM errors! It's just part of the process.)
-
-**Note**: This involves a lot of very complex behind-the-scenes stuff. Often, "recreating the dev environment" is one of the biggest challenges to getting started in a programming project. Don't be surprised if you need help from a mentor at this stage. Just ask!
-
-**Note**: On Windows Subsystem for Linux (WSL), installing **wpilib-util** fails trying to find **std::span**. Larry reckons this indicates that WSL is using an older **gcc**. See https://github.com/WHEARobotics/FRC2023/issues/2
-
-## IMPORTANT! Activate the **frc** environment before work!
+### IMPORTANT! Activate the **frc** environment before work!
 
 When you open a terminal, the **conda** program puts you in the **base** environment, which does not contain any shared libraries and may not even have a Python interpreter installed. You **MUST** activate the **frc** environment, every session, by running:
 
@@ -57,6 +51,18 @@ frc                   *  /home/lobrien/mambaforge/envs/frc
 ```
 
 The currently activated environment will be marked with an asterisk. In this case, you can see that the **frc** environment is activated. 
+
+## Install libraries using **pip**
+
+Install the libraries used by our team with:
+
+    pip install -r requirements.txt
+
+This program will take a minute or two to run. It will download and install the appropriate Python runtime and tools and all the listed packages. We will undoubtedly decide to include some other packages. When we do so, we'll update **requirements.txt** and save it so we don't struggle with "works on my machine!" errors. (There are _always_ WOMM errors! It's just part of the process.)
+
+**Note**: This involves a lot of very complex behind-the-scenes stuff. Often, "recreating the dev environment" is one of the biggest challenges to getting started in a programming project. Don't be surprised if you need help from a mentor at this stage. Just ask!
+
+**Note**: On Windows Subsystem for Linux (WSL), installing **wpilib-util** fails trying to find **std::span**. Larry reckons this indicates that WSL is using an older **gcc**. See https://github.com/WHEARobotics/FRC2023/issues/2
 
 ## Verify the most critical tools
 
