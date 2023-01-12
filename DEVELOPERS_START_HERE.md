@@ -27,9 +27,9 @@ The **requirements.txt** file defines the Python libraries used in the common de
 
 Run:
 
-    conda create -n frc python=3.11
+    conda create -n frc python=3.10
 
-You are asking the **conda** program to create an environment. The name of the environment is "frc" (`-n frc`). The version of Python we will use is Python 3.11 (`python=3.11`).
+You are asking the **conda** program to create an environment. The name of the environment is "frc" (`-n frc`). The version of Python we will use is Python 3.10 (`python=3.10`).
 
 ### IMPORTANT! Activate the **frc** environment before work!
 
@@ -68,9 +68,9 @@ This program will take a minute or two to run. It will download and install the 
 
 Once you have activated the **frc** environment, you should be able to program our robot! First, though, let's verify the installation went well. In a terminal, switch to the **src/helloworld/** subdirectory (`cd ./src/helloworld/`), activate the **frc** conda environment, and:
 
-### Verify you are running Python 3.11
+### Verify you are running Python 3.10
 
-Run `python --version`. Expected result: `Python 3.11.0`
+Run `python --version`. Expected result: `Python 3.10.0`
 
 ### Verify that you can run a simple wpilib robot
 
