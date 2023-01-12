@@ -2,7 +2,7 @@
 
 Sharkbots uses Python for programming. Because Python has a very large community and because it's very easy to add new libraries to a python environment, it's very easy for developers to end up with a lot of complex dependencies that end up causing trouble on the actual RoboRio or outboard processor. To (help) fight that, please use the **conda** package manager to create a "virtual environment." Everyone will share the same libraries and be able to to recreate the virtual environment quickly.
 
-**NOTE**: At the moment, Larry has had difficulty installing the Python wpilib into Window's implementation of Linux (Windows Subsystem for Linux). Until that's figured out, if you're using a Windows machine, use the **Command prompt** or **Windows Powershell** terminals to work. 
+**NOTE**: If you want to develop in a Linux environment under Windows (using the Windows Subsystem for Linux aka WSL), you may. However, you **must** use Ubuntu 22 to do so. Ubuntu 18 requires a lot of upgrades to work with wpilib. If you're using a Windows machine and don't want to use Linux, use the **Command prompt** or **Windows Powershell** terminals to work. 
 
 ## Clone this repo 
 
