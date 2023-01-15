@@ -2,7 +2,7 @@
 
 Sharkbots uses Python for programming. Because Python has a very large community and because it's very easy to add new libraries to a python environment, it's very easy for developers to end up with a lot of complex dependencies that end up causing trouble on the actual RoboRio or outboard processor. To (help) fight that, please use the **conda** package manager to create a "virtual environment." Everyone will share the same libraries and be able to to recreate the virtual environment quickly.
 
-**NOTE**: At the moment, Larry has had difficulty installing the Python wpilib into Window's implementation of Linux (Windows Subsystem for Linux). Until that's figured out, if you're using a Windows machine, use the **Command prompt** or **Windows Powershell** terminals to work. 
+**NOTE**: If you want to develop in a Linux environment under Windows (using the Windows Subsystem for Linux aka WSL), you may. However, you **must** use Ubuntu 22 to do so. Ubuntu 18 requires a lot of upgrades to work with wpilib. If you're using a Windows machine and don't want to use Linux, use the **Command prompt** or **Windows Powershell** terminals to work. 
 
 ## Clone this repo 
 
@@ -27,9 +27,9 @@ The **requirements.txt** file defines the Python libraries used in the common de
 
 Run:
 
-    conda create -n frc python=3.11
+    conda create -n frc python=3.10
 
-You are asking the **conda** program to create an environment. The name of the environment is "frc" (`-n frc`). The version of Python we will use is Python 3.11 (`python=3.11`).
+You are asking the **conda** program to create an environment. The name of the environment is "frc" (`-n frc`). The version of Python we will use is Python 3.10 (`python=3.10`).
 
 ### IMPORTANT! Activate the **frc** environment before work!
 
@@ -68,9 +68,9 @@ This program will take a minute or two to run. It will download and install the 
 
 Once you have activated the **frc** environment, you should be able to program our robot! First, though, let's verify the installation went well. In a terminal, switch to the **src/helloworld/** subdirectory (`cd ./src/helloworld/`), activate the **frc** conda environment, and:
 
-### Verify you are running Python 3.11
+### Verify you are running Python 3.10
 
-Run `python --version`. Expected result: `Python 3.11.0`
+Run `python --version`. Expected result: `Python 3.10.0`
 
 ### Verify that you can run a simple wpilib robot
 
