@@ -1,3 +1,8 @@
+# RobotPy related install/deploy config files
+# Just holds the hostname of the robot.
+.deploy_cfg
+.installer_config
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
