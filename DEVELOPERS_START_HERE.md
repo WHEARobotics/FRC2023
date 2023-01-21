@@ -74,7 +74,7 @@ Run `python --version`. Expected result: `Python 3.10.0`
 
 ### Verify that you can run a simple wpilib robot
 
-Switch to the **robot/" subdirectory of **src/helloworld/" and run:
+Switch to the **robot/** subdirectory of **src/helloworld/** and run:
 
     python hello_robot.py sim
 
