@@ -16,13 +16,47 @@ class SwerveRobot(wpilib.TimedRobot):
         self.ySpeedLimiter = SlewRateLimiter(3)
         self.rotLimiter = SlewRateLimiter(3)
 
+
+    #### "Disabled" functions in this section
+
+    # One-time initialization for "disabled" period
+    def disabledInit(self) -> None:
+        pass
+
+    # One-time cleanup for "disabled" period
+    def disabledExit(self) -> None:
+        pass
+
+    ##### "Autonomous" functions in this section #####
+
+    # One-time initialization for autonomous functions here
+    def autonomousInit(self) -> None:
+
+    # Called repeatedly during auto
     def autonomousPeriodic(self):
+        # TODO: Replace this with autonomous code.
         self.driveWithJoystick(False)
+
         self.swerve.updateOdometry()
+
+    # One-time cleanup at end of autonomous
+    def autonomousExit(self) -> None:
+        pass
+
+    #### "Teleop" functions in this section ####
+
+    # One-time initialization for teleop
+    # Use joystick for manual control
+    def teleopInit(self) -> None:
+
 
     def teleopPeriodic(self):
         self.driveWithJoystick(True)
-        
+        self.swerve.updateOdometry()
+
+    def teleopExit(self) -> None:
+        pass
+
     def driveWithJoystick(self, fieldRelative: bool) -> None:
         # Get the x speed. We are inverting this because Xbox controllers return
         # negative values when we push forward.
