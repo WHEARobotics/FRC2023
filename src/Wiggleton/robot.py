@@ -51,8 +51,8 @@ class Myrobot(wpilib.TimedRobot):
         wpilib.SmartDashboard.putString('DB/String 3',"system test")
         wpilib.SmartDashboard.putString('DB/String 4',"Time: {:3.2f}".format(self.wiggleTimer.get()))
 
-        wpilib.SmartDashboard.putNumber('DB/string 5',113)
-        wpilib.SmartDashboard.putString('DB/string 6',113)
+        wpilib.SmartDashboard.putNumber('DB/number 5',113)
+        wpilib.SmartDashboard.putNumber('DB/number 6',113)
 
     def disabledPeriodic(self):
         pass
@@ -83,7 +83,7 @@ class Myrobot(wpilib.TimedRobot):
         #get the output of the motors in percentage of joystick values
         self.frontLeft.set(ctre._ctre.ControlMode.PercentOutput, 0.2)  #// delete b,l + b,r motor output and delete comments from the follow code in
         self.frontRight.set(ctre._ctre.ControlMode.PercentOutput, 0.2) #// line 39-40 if follow command does not work, bring back motor percentage #// 
-        self.backLeft.set(ctre._ctre.ControlMode.PercentOutput, 0.2).  
+        self.backLeft.set(ctre._ctre.ControlMode.PercentOutput, 0.2)
         self.backRight.set(ctre._ctre.ControlMode.PercentOutput, 0.2) #// also change values (the 0.2) to the joystick values
 
         # self.frontRight.set(ctre._ctre.ControlMode.PercentOutput, right_command) //you can delete this, but replace numbers with right_command
