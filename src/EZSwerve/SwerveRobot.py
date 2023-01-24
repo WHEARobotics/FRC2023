@@ -31,6 +31,7 @@ class SwerveRobot(wpilib.TimedRobot):
 
     # One-time initialization for autonomous functions here
     def autonomousInit(self) -> None:
+        pass
 
     # Called repeatedly during auto
     def autonomousPeriodic(self):
@@ -39,7 +40,7 @@ class SwerveRobot(wpilib.TimedRobot):
         # in given time (how far it can move, etc.)
         self.driveWithJoystick(False)
 
-        self.swerve.updateOdometry()
+        self.swerve.periodic()
 
     # One-time cleanup at end of autonomous
     def autonomousExit(self) -> None:
@@ -50,11 +51,11 @@ class SwerveRobot(wpilib.TimedRobot):
     # One-time initialization for teleop
     # Use joystick for manual control
     def teleopInit(self) -> None:
-
+        pass
 
     def teleopPeriodic(self):
         self.driveWithJoystick(True)
-        self.swerve.updateOdometry()
+        self.swerve.periodic()
 
     def teleopExit(self) -> None:
         pass
