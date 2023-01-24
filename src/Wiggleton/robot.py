@@ -42,7 +42,7 @@ class Myrobot(wpilib.TimedRobot):
         # self.backRight.follow(self.frontRight)
 
 
-    def diabledInit(self):
+    def disabledInit(self):
         self.wiggleTimer.start()
 
         wpilib.SmartDashboard.putString('DB/String 0',"system test")
