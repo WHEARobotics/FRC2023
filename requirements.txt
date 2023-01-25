@@ -78,14 +78,14 @@ psutil==5.9.4
 ptyprocess==0.7.0
 pure-eval==0.2.2
 pycparser==2.21
-pyfrc==2023.0.1
+pyfrc~=2023.0.0
 Pygments==2.14.0
 PyNaCl==1.5.0
 pynetconsole==2.0.4
 pyntcore==2023.2.1.1
 pyparsing==3.0.9
 pyrsistent==0.19.3
-pytest==7.2.1
+pytest~=7.2.0
 pytest-reraise==2.1.2
 python-dateutil==2.8.2
 python-json-logger==2.0.4
@@ -132,4 +132,4 @@ webencodings==0.5.1
 websocket-client==1.4.2
 wheel==0.37.1
 wincertstore==0.2
-wpilib==2023.2.1.0
+wpilib~=2023.2.1.0
