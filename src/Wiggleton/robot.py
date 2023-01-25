@@ -10,7 +10,7 @@ class Myrobot(wpilib.TimedRobot):
 
         self.wiggleTimer = wpilib.Timer()
 
-        #self.joystickR = wpilib.Joystick(0) #//Check the steps commented below for what to start putting back in for testing but this will be taken out
+        # self.joystickR = wpilib.Joystick(0) #//Check the steps commented below for what to start putting back in for testing but this will be taken out
         # self.joystickL = wpilib.Joystick(1)
     
         self.xbox = wpilib.XboxController(1) #you can choose between using the xbox code or joystick but xbox is what well be sticking with
@@ -53,8 +53,8 @@ class Myrobot(wpilib.TimedRobot):
         wpilib.SmartDashboard.putString('DB/String 3',"system test")
         wpilib.SmartDashboard.putString('DB/String 4',"Time: {:3.2f}".format(self.wiggleTimer.get()))
 
-        #wpilib.SmartDashboard.putNumber('DB/string 5',113)
-        #wpilib.SmartDashboard.putString('DB/string 6',113)
+        wpilib.SmartDashboard.putNumber('DB/number 5',113)
+        wpilib.SmartDashboard.putNumber('DB/number 6',113)
 
     def disabledPeriodic(self):
         pass
