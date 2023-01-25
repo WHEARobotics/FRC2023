@@ -1,15 +1,21 @@
+from __future__ import annotations
+
 from wpimath.kinematics import SwerveDrive4Kinematics, SwerveDrive4Odometry, SwerveModulePosition, SwerveModuleState, ChassisSpeeds
 from wpimath.geometry import Translation2d, Rotation2d, Pose2d
 from wpimath.controller import PIDController
 from wpilib import AnalogGyro, Field2d, SmartDashboard
+
+import wpimath.kinematics._kinematics
+import typing
+import wpimath.geometry._geometry
 
 import math
 
 from SwerveModule import SwerveModule
 
 class SwerveDrivetrain:
-    MAX_SPEED = 3.0
-    MAX_ANGULAR_SPEED = math.pi # 1/2 rotation per second
+    MAX_SPEED : meters_per_second = 3.0
+    MAX_ANGULAR_SPEED : radians_per_second = math.pi # 1/2 rotation per second
     
     def __init__(self):
 
@@ -95,12 +101,12 @@ class SwerveDrivetrain:
         self.fieldSim.getObject("Swerve Modules").setPoses(self.module_poses)
 
 
-    def drive(self, xSpeed, ySpeed, rot, fieldRelative):
+    def drive(self, xSpeed : meters_per_second, ySpeed : meters_per_second, rot : radians_per_second, fieldRelative : bool) -> None:
         chassis_speeds = ChassisSpeeds(xSpeed, ySpeed, rot) if not fieldRelative \
             else ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, self.gyro.getRotation2d())
         swerveModuleStates = self.kinematics.toSwerveModuleStates(chassis_speeds)
 
-        SwerveDrive4Kinematics.desaturateWheelSpeeds(swerveModuleStates, self.MAX_SPEED)
+        swerveModuleStates = SwerveDrive4Kinematics.desaturateWheelSpeeds(swerveModuleStates, self.MAX_SPEED)
 
         self.frontLeft.setDesiredState(swerveModuleStates[0])
         self.frontRight.setDesiredState(swerveModuleStates[1])
@@ -117,14 +123,14 @@ class SwerveDrivetrain:
             self.backRight.getPosition()
         )
 
-    def get_heading(self):
+    def get_heading(self) -> Rotation2d:
         return self.gyro.getRotation2d()
 
-    def get_pose(self):
+    def get_pose(self) -> Pose2d :
         return self.odometry.getPose()
 
     @classmethod
-    def getMaxSpeed(cls):
+    def getMaxSpeed(cls) -> meters_per_second:
         return cls.MAX_SPEED
 
 

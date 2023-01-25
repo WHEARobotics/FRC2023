@@ -35,10 +35,7 @@ class SwerveRobot(wpilib.TimedRobot):
 
     # Called repeatedly during auto
     def autonomousPeriodic(self):
-        # During dev, allow joystick-based control
-        # This could be helpful to see what is reasonable
-        # in given time (how far it can move, etc.)
-        self.driveWithJoystick(False)
+        self.swerve.drive(1, -1, 0.1, False)
 
         self.swerve.periodic()
 

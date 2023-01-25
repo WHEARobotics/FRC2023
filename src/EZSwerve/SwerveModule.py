@@ -1,6 +1,7 @@
 
 import wpilib
 import wpimath
+from ctre import TalonFX, ControlMode
 from wpimath.controller import PIDController, ProfiledPIDController
 from wpimath.controller import SimpleMotorFeedforwardMeters
 from wpimath.geometry import Rotation2d, Translation2d
@@ -24,8 +25,8 @@ class SwerveModule:
         # Does this constant mean we're using radians?
         self.MODULE_MAX_ANGULAR_ACCELERATION = 2 * math.pi
 
-        self.driveMotor = PWMSparkMax(driveMotorChannel)
-        self.turningMotor = PWMSparkMax(turningMotorChannel)
+        self.driveMotor = TalonFX(driveMotorChannel)
+        self.turningMotor = TalonFX(turningMotorChannel)
         
         self.driveEncoder = wpilib.Encoder(driveEncoderChannelA, driveEncoderChannelB)
         self.turningEncoder = wpilib.Encoder(turningEncoderChannelA, turningEncoderChannelB)
@@ -74,8 +75,8 @@ class SwerveModule:
         turnFeedForward = self.turnFeedForward.calculate(self.turningPIDController.getSetpoint().velocity)
 
         # Set the motor outputs
-        self.driveMotor.setVoltage(driveOutput + driveFeedForward)
-        self.turningMotor.setVoltage(turnOutput + turnFeedForward)
+        self.driveMotor.set(ControlMode.Current, driveOutput + driveFeedForward)
+        self.turningMotor.set(ControlMode.Current, turnOutput + turnFeedForward)
 
     def resetEncoders(self) -> None:
         self.driveEncoder.reset()
