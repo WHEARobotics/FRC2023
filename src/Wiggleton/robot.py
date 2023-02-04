@@ -3,6 +3,7 @@
 import wpilib
 import ctre
 import wpilib.drive
+#import cv2
 
 class Myrobot(wpilib.TimedRobot):
 
@@ -21,6 +22,10 @@ class Myrobot(wpilib.TimedRobot):
         self.backLeft = ctre.TalonFX(9) 
         self.backRight = ctre.TalonFX(5)
 
+        self.testmotor = ctre.TalonFX(4)
+
+        self.armjoint = ctre.TalonFX(7)
+        self.claw = ctre.TalonFX(4)
 
         self.frontLeft.setInverted(False) # 
         
@@ -34,6 +39,26 @@ class Myrobot(wpilib.TimedRobot):
         self.frontRight.setNeutralMode(ctre._ctre.NeutralMode.Coast)
         self.backLeft.setNeutralMode(ctre._ctre.NeutralMode.Coast)
         self.backRight.setNeutralMode(ctre._ctre.NeutralMode.Coast)
+
+        self.testmotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
+
+        #Gear ratio is 10.71 for Falcon motor and 2048 is the motors counts in one revolution
+        self.armUpperPos = 2048 * 10.71
+        #Lower Position for arm motor
+        self.armLowerPos = 0
+
+    
+        #vision subsystem
+        #wpilib.CameraServer.launch("vision.py:main")
+        #https://roborio-3881-frc.local:1181
+        #https://10.38.81.101:1181/
+        
+        #video_capture_device_index=0
+        # Java Type is "edu.wpi.cscore.CvSink"
+        #self.webcam = wpilib.CameraServer.getVideo()
+        #print(f"Webcam is : {self.webcam}")  
+
+
     #    self.drivetrain = wpilib.drive.MecanumDrive(self.frontLeft, self.backLeft, self.frontRight, self.backLeft)
     
     #// take out comments for setting motors to coast + for mecanum drive function
@@ -71,7 +96,16 @@ class Myrobot(wpilib.TimedRobot):
         self.wiggleTimer.reset()
         self.wiggleTimer.start()
 
+        self.testmotor.setSelectedSensorPosition(0.0)
+
+        self.state = 0
+
+        
+
     def teleopPeriodic(self):
+        
+        
+
         '''  #joystick code
         move_y = self.joystick.getY()   
         move_x = self.joystick.getX()
@@ -93,19 +127,74 @@ class Myrobot(wpilib.TimedRobot):
         right_command = -self.xbox.getRightY()
         left_command = -self.xbox.getLeftY()
 
+        #arm motor
+        #value of the arm = getthebutton
+        #arm_command1 x= self.xbox.getBButton()
+        #value of the arm = getanothterbutton
+        #arm_command2 = -self.xbox.getAButton()
+
         #get the output of the motors in percentage of joystick values
         self.frontLeft.set(ctre._ctre.ControlMode.PercentOutput, left_command)  #// delete b,l + b,r motor output and delete comments from the follow code in
         self.frontRight.set(ctre._ctre.ControlMode.PercentOutput, right_command) #// line 39-40 if follow command does not work, bring back motor percentage #// 
         self.backLeft.set(ctre._ctre.ControlMode.PercentOutput, left_command)  
         self.backRight.set(ctre._ctre.ControlMode.PercentOutput, right_command) #// also change values (the 0.2) to the joystick values
+        self.frontRight.set(ctre._ctre.ControlMode.PercentOutput, right_command) #//you can delete this, but replace numbers with right_command
 
-        # self.frontRight.set(ctre._ctre.ControlMode.PercentOutput, right_command) //you can delete this, but replace numbers with right_command
+        #get the output of the motors for button values
+        # if self.xbox.getBButton():
+        #     self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, -0.1)
+        # elif self.xbox.getAButton():
+        #     self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.1)
+        # else:
+        #     self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+        
+
 
         '''# Drive cartesian allows the robot to drive in the cartesian cordinates by specifying the desired speed for each axis
         self.drivetrain.driveCartesian(move_y / 2, move_x  /2, move_z / 2)
         #self.drivetrain.driveCartesian(move_y / 4, move_x / 4, move_z / 4, -self.gyro.getAngle())
         '''
         wpilib.SmartDashboard.putString('DB/String 4',"Time: {:3.2f}".format(self.wiggleTimer.get()))
+        position = self.testmotor.getSelectedSensorPosition()
+        wpilib.SmartDashboard.putString('DB/String 7',"Position: {:4.2f}".format(position))
+        
+        # this is a block saying if B button on the xbox is pressed then it will move positively by .1 or else it wont move
+        # if self.testmotor.getSelectedSensorPosition() < self.armUpperPos:
+        #     if self.xbox.getBButton():
+        #         self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.1)
+        #     else: 
+        #         self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+        # else:
+        #     self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+
+
+        #if the left bumper is pressed then the motor will move up and stay at the set position until the right bumper is pressed and the motor will move back to 0, its lowest position
+        #if the left bumper is pressed and the motor position is lower than the "2048 * 10.71" position (you wont be able to press right bumper as the value is lower than its "2048 * 10.71"" position) the motor will move up to its "2048 *10.71:
+        #if the right bumper is pressed and the motor position is above the "0" position (you wont be able to press the right bumper as the value is its "0" position) the motor will move down to its "0"
+        #if the motor is already at its "0 position" then it wont move at all
+        
+        if self.state == 0:
+            if self.xbox.getLeftBumper() and position <= self.armUpperPos: 
+                self.state = 1
+            elif self.xbox.getRightBumper() and position >= self.armLowerPos:
+                self.state = 2 
+        elif self.state == 1:
+            if self.testmotor.getSelectedSensorPosition() >= self.armUpperPos:
+                self.state = 0
+        else: 
+            if self.testmotor.getSelectedSensorPosition() <= self.armLowerPos:
+                self.state = 0
+
+        if self.state == 0:
+            self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+        elif self.state == 1:
+            self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.1)
+        else: 
+            self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, -0.1)
+        
+    
+    #def teleopExit(self):
+        #self.webcam.release()
 
 
 
