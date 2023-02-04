@@ -15,19 +15,25 @@ from wpilib import PWMSparkMax
 
 import math
 
-class SwerveModule:
-    def __init__(self, driveMotorChannel : int, turningMotorChannel : int, \
-        driveEncoderChannelA : int, driveEncoderChannelB : int, \
-        turningEncoderChannelA : int, turningEncoderChannelB : int) -> None:
-        self.WHEEL_RADIUS = 0.0508
-        self.ENCODER_RESOLUTION = 4096
+class SwerveModule:                                                                 #UPDATE: 2/3/2023
+    def __init__(self, driveMotorChannel : int, turningMotorChannel : int, \        #When it talks about channels, those are the numbers we assign to
+        driveEncoderChannelA : int, driveEncoderChannelB : int, \                   #   each module/item on the CANbus. It looks like each encoder has two channels
+        turningEncoderChannelA : int, turningEncoderChannelB : int) -> None:        #   we need to assign to them to make them function
+            
+            #The above portion of the method, conceptually, could be changed to hold four parameters, since the ctre CANcoder method only needs one channel
+            #This means we need to go into SwerveDrivetrain.py and change the SwerveModules to hold the four parameters we cahnge the code above to.
+            
+        self.WHEEL_RADIUS = 0.0508                                                  #Q: What's ours?
+        self.ENCODER_RESOLUTION = 4096                                              #This is true for the CTRE CANcoders (see manual linked in SLACK).
         self.MODULE_MAX_ANGULAR_VELOCITY = math.pi # 1/2 rotation per second. Note this must == SwerveDriveTrain.MAX_ANGULAR_SPEED
-        # Does this constant mean we're using radians?
+        # Does this constant mean we're using radians?                              #A: 2/3/2023- YES!!  Let's do it!!!
         self.MODULE_MAX_ANGULAR_ACCELERATION = 2 * math.pi
 
-        self.driveMotor = TalonFX(driveMotorChannel)
-        self.turningMotor = TalonFX(turningMotorChannel)
+        self.driveMotor = TalonFX(driveMotorChannel)                 #"Channel" is ID on CAN bus
+        self.turningMotor = TalonFX(turningMotorChannel)             #i.e. TalonFX(1) is ID#1 in phoenix Tuner/on CAN bus.
         
+        #   2/3/2023- USE THIS METHOD:ctre.sensors.CANCoder(deviceNumber: int)
+        #EG- self.driveEncoder = ctre.sensors.CANCoder(deviceNumber: int)
         self.driveEncoder = wpilib.Encoder(driveEncoderChannelA, driveEncoderChannelB)
         self.turningEncoder = wpilib.Encoder(turningEncoderChannelA, turningEncoderChannelB)
 
