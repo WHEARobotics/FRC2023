@@ -25,7 +25,15 @@ class SwerveDrivetrain:
         self.backLeftLocation = Translation2d(-0.381, 0.381)
         self.backRightLocation = Translation2d(-0.381, -0.381)
 
-        self.frontLeft = SwerveModule(1, 2, 0, 1, 2, 3)
+        
+        #UPDATE 2/3/2023: See lines 19-21 in SwerveModule.py for the full method parameters.
+                #EG- driveTalon(1), turnTalon(2), driveEncA(0), driveEncB(1), turnEncA(1), turnEncB(3)
+                # It looks like the motor controllers share the same CANbus ID as the Encoder Channel A, 
+                # but Encoder Channel B for each has their own ID on the CANbus)
+                # Since the ctre CANcoders will only take one parameter, we'll most likely be changing the code below to hold four arguements
+                
+                     
+        self.frontLeft = SwerveModule(1, 2, 0, 1, 2, 3)  
         self.frontRight = SwerveModule(3, 4, 4, 5, 6, 7)
         self.backLeft = SwerveModule(5, 6, 8, 9, 10, 11)
         self.backRight = SwerveModule(7, 8, 12, 13, 14, 15)
