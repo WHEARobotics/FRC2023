@@ -145,3 +145,10 @@ If you've:
    1. Webcam capture
 
 You should have all the tools ready to begin programming! 
+
+# Updating the RobotPy installation on your PC and the roboRIO
+
+1. While connected to the Internet, `pip install -U robotpy[all]`.  Upgrades all the robotpy files on the PC, the ones that are used to simulate and deploy.
+1. Still connected to the Internet, `python -m robotpy_installer download robotpy[all]` to get the latest robot files, which should be version synchronized with the above if you do them the same day.
+1. Connect the PC to the robot, either over Wi-Fi or USB, `python -m robotpy_installer install robotpy[all]` to put those files onto the roboRIO.
+1. It is a good idea to run the first step on all the PCs the same day so that they will all be the same version as what is on the robot(s).
