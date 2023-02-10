@@ -17,35 +17,42 @@ class Myrobot(wpilib.TimedRobot):
         self.xbox = wpilib.XboxController(1) #you can choose between using the xbox code or joystick but xbox is what well be sticking with
 
 
-        self.frontLeft = ctre.TalonFX(8)
-        self.frontRight = ctre.TalonFX(6)
-        self.backLeft = ctre.TalonFX(9) 
-        self.backRight = ctre.TalonFX(5)
+        # self.frontLeft = ctre.TalonFX(8)
+        # self.frontRight = ctre.TalonFX(6)
+        # self.backLeft = ctre.TalonFX(9) 
+        # self.backRight = ctre.TalonFX(5)
 
         self.testmotor = ctre.TalonFX(4)
 
-        self.armjoint = ctre.TalonFX(7)
-        self.claw = ctre.TalonFX(4)
+        # self.wristjoint = ctre.TalonFX(7)
+        # self.claw = ctre.TalonFX(4)
 
-        self.frontLeft.setInverted(False) # 
+        # self.frontLeft.setInverted(False) # 
         
-        self.frontRight.setInverted(True) # 
-        self.backLeft.setInverted(False) # 
-        self.backRight.setInverted(True) # 
+        # self.frontRight.setInverted(True) # 
+        # self.backLeft.setInverted(False) # 
+        # self.backRight.setInverted(True) # 
+        self.testmotor.setInverted(True)
 
-
-        self.frontLeft.setNeutralMode(ctre._ctre.NeutralMode.Coast)
+        # self.frontLeft.setNeutralMode(ctre._ctre.NeutralMode.Coast)
         
-        self.frontRight.setNeutralMode(ctre._ctre.NeutralMode.Coast)
-        self.backLeft.setNeutralMode(ctre._ctre.NeutralMode.Coast)
-        self.backRight.setNeutralMode(ctre._ctre.NeutralMode.Coast)
+        # self.frontRight.setNeutralMode(ctre._ctre.NeutralMode.Coast)
+        # self.backLeft.setNeutralMode(ctre._ctre.NeutralMode.Coast)
+        # self.backRight.setNeutralMode(ctre._ctre.NeutralMode.Coast)
 
         self.testmotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
+        #self.wristjoint.setNeutralMode(ctre._ctre.NeutralMode.Brake)
 
         #Gear ratio is 10.71 for Falcon motor and 2048 is the motors counts in one revolution
-        self.armUpperPos = 2048 * 10.71
+        self.armMPos = 2048 * 10.71 * 0.1
         #Lower Position for arm motor
         self.armLowerPos = 0
+
+        self.armUpperPos = 2048 * 10.71 * 0.2
+        
+        # self.wristjointLowerPos = 0
+
+        # self.wristjointUpperPos = 2048 * 12  * 0.2
 
     
         #vision subsystem
@@ -97,9 +104,10 @@ class Myrobot(wpilib.TimedRobot):
         self.wiggleTimer.start()
 
         self.testmotor.setSelectedSensorPosition(0.0)
+        # self.wristjoint.setSelectedSensorPosition(0.0)
 
         self.state = 0
-
+        # self.wstate = 0
         
 
     def teleopPeriodic(self):
@@ -123,22 +131,22 @@ class Myrobot(wpilib.TimedRobot):
         # left_command = self.joystickL.getY()
         #right_command = self.joystickR.getY()
 
-        #Get xbox values
-        right_command = -self.xbox.getRightY()
-        left_command = -self.xbox.getLeftY()
+        # #Get xbox values
+        # right_command = -self.xbox.getRightY()
+        # left_command = -self.xbox.getLeftY()
 
-        #arm motor
-        #value of the arm = getthebutton
-        #arm_command1 x= self.xbox.getBButton()
-        #value of the arm = getanothterbutton
-        #arm_command2 = -self.xbox.getAButton()
+        # #arm motor
+        # #value of the arm = getthebutton
+        # #arm_command1 x= self.xbox.getBButton()
+        # #value of the arm = getanothterbutton
+        # #arm_command2 = -self.xbox.getAButton()
 
-        #get the output of the motors in percentage of joystick values
-        self.frontLeft.set(ctre._ctre.ControlMode.PercentOutput, left_command)  #// delete b,l + b,r motor output and delete comments from the follow code in
-        self.frontRight.set(ctre._ctre.ControlMode.PercentOutput, right_command) #// line 39-40 if follow command does not work, bring back motor percentage #// 
-        self.backLeft.set(ctre._ctre.ControlMode.PercentOutput, left_command)  
-        self.backRight.set(ctre._ctre.ControlMode.PercentOutput, right_command) #// also change values (the 0.2) to the joystick values
-        self.frontRight.set(ctre._ctre.ControlMode.PercentOutput, right_command) #//you can delete this, but replace numbers with right_command
+        # #get the output of the motors in percentage of joystick values
+        # self.frontLeft.set(ctre._ctre.ControlMode.PercentOutput, left_command)  #// delete b,l + b,r motor output and delete comments from the follow code in
+        # self.frontRight.set(ctre._ctre.ControlMode.PercentOutput, right_command) #// line 39-40 if follow command does not work, bring back motor percentage #// 
+        # self.backLeft.set(ctre._ctre.ControlMode.PercentOutput, left_command)  
+        # self.backRight.set(ctre._ctre.ControlMode.PercentOutput, right_command) #// also change values (the 0.2) to the joystick values
+        # self.frontRight.set(ctre._ctre.ControlMode.PercentOutput, right_command) #//you can delete this, but replace numbers with right_command
 
         #get the output of the motors for button values
         # if self.xbox.getBButton():
@@ -156,7 +164,8 @@ class Myrobot(wpilib.TimedRobot):
         '''
         wpilib.SmartDashboard.putString('DB/String 4',"Time: {:3.2f}".format(self.wiggleTimer.get()))
         position = self.testmotor.getSelectedSensorPosition()
-        wpilib.SmartDashboard.putString('DB/String 7',"Position: {:4.2f}".format(position))
+        # wposition = self.wristjoint.getSelectedSensorPosition()
+        wpilib.SmartDashboard.putString('DB/String 7',"Position: {:4.2f}".format(position / self.armUpperPos))
         
         # this is a block saying if B button on the xbox is pressed then it will move positively by .1 or else it wont move
         # if self.testmotor.getSelectedSensorPosition() < self.armUpperPos:
@@ -172,27 +181,88 @@ class Myrobot(wpilib.TimedRobot):
         #if the left bumper is pressed and the motor position is lower than the "2048 * 10.71" position (you wont be able to press right bumper as the value is lower than its "2048 * 10.71"" position) the motor will move up to its "2048 *10.71:
         #if the right bumper is pressed and the motor position is above the "0" position (you wont be able to press the right bumper as the value is its "0" position) the motor will move down to its "0"
         #if the motor is already at its "0 position" then it wont move at all
+
+        
+        # henry
+        # if self.xbox.getAButton()
+        #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.1)
+        # elif self.xbox.getBButton()
+        #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.1) 
+        # else:
+        #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+
         
         if self.state == 0:
-            if self.xbox.getLeftBumper() and position <= self.armUpperPos: 
-                self.state = 1
-            elif self.xbox.getRightBumper() and position >= self.armLowerPos:
-                self.state = 2 
+            if self.xbox.getRightBumper():
+                if position < self.armMPos: 
+                    self.state = 1
+                elif position >= self.armMPos and position < self.armUpperPos: 
+                    self.state = 3
+            elif self.xbox.getLeftBumper():
+                if position > self.armMPos: 
+                       self.state = 2
+                elif position <= self.armMPos and position > self.armLowerPos: 
+                    self.state = 4
+#            elif self.xbox.getAButton() and position <= self.armMPos: #for now we are using buttons A and B but plan to change it later
+#                self.state = 1
+                #if 
+#            elif self.xbox.getBButton() and position >= self.armMPos:
+#                self.state = 2
+
+        #jay, zack, james
+
         elif self.state == 1:
-            if self.testmotor.getSelectedSensorPosition() >= self.armUpperPos:
+            if self.testmotor.getSelectedSensorPosition() >= self.armMPos: 
                 self.state = 0
-        else: 
+        elif self.state == 3: 
+            if self.testmotor.getSelectedSensorPosition() >= self.armUpperPos:
+               self.state = 0
+        elif self.state == 2: 
+            if self.testmotor.getSelectedSensorPosition() <= self.armMPos:
+                self.state = 0
+        elif self.state == 4:
             if self.testmotor.getSelectedSensorPosition() <= self.armLowerPos:
                 self.state = 0
+ 
+
 
         if self.state == 0:
             self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
         elif self.state == 1:
-            self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.1)
-        else: 
-            self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, -0.1)
+            self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.25 )
+        elif self.state == 2: 
+            self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, -0.25 )
+        elif self.state == 3:
+            self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.25 )
+        elif self.state == 4: 
+            self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, -0.25 )
         
+        
+        # #tam
+
+        # if self.wstate == 0:
+        #     if self.xbox.getAButton() and wposition <= self.wristjointUpperPos: 
+        #         self.wstate = 1
+        #     elif self.xbox.getBButton() and wposition >= self.wristjointLowerPos:
+        #         self.wstate = 2 
+        # elif self.wstate == 1:
+        #     if self.wristjoint.getSelectedSensorPosition() >= self.wristjointUpperPos:
+        #         self.wstate = 0
+        # else: 
+        #     if self.wristjoint.getSelectedSensorPosition() <= self.wristjointLowerPos:
+        #         self.wstate = 0
+
+        # if self.wstate == 0:
+        #     self.wristjoint.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+        # elif self.wstate == 1:
+        #     self.wristjoint.set(ctre._ctre.ControlMode.PercentOutput, 0.1)
+        # elif self.wstate == 2:
+        #     self.wristjoint.set(ctre._ctre.ControlMode.PercentOutput, -0.1)
+        # else:
+        #     self.wristjoint.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+
     
+
     #def teleopExit(self):
         #self.webcam.release()
 
