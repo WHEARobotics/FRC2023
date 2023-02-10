@@ -34,7 +34,7 @@ class SwerveModule:                                                             
         
         #   2/3/2023- USE THIS METHOD:ctre.sensors.CANCoder(deviceNumber: int)
         #EG- self.driveEncoder = ctre.sensors.CANCoder(deviceNumber: int)
-        self.driveEncoder = wpilib.Encoder(driveEncoderChannelA, driveEncoderChannelB)
+        self.driveEncoder = wpilib.Encoder(driveEncoderChannelA, driveEncoderChannelB)                                                                  #IMPORTANT ROAD BLOCK CLEAR: instead of using two two channels for the drive encoder, we can use the integrated encoder (selected sensor position) to represent this paramiter. so we will have, for this class: driveMotor(falcon), turnMotor(falcon), driveEncoder(Falcon integrated enc), turnEncoder(the added CANCoder)
         self.turningEncoder = wpilib.Encoder(turningEncoderChannelA, turningEncoderChannelB)
 
         # Set the distance per pulse for the drive encoder. This can be
