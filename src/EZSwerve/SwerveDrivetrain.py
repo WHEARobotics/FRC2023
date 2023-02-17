@@ -14,12 +14,17 @@ import math
 from SwerveModule import SwerveModule
 
 class SwerveDrivetrain:
+    # I'd suggest not try to use the units functionality, and just stick to floats.
+    # Whether we use degrees or radians for angle is debatable:
+    #  - radians is going to be slightly more efficient, to not be converting back and forth.
+    #  - degrees is more familiar, and the performance hit may not be that great.
     MAX_SPEED : meters_per_second = 3.0
     MAX_ANGULAR_SPEED : radians_per_second = math.pi # 1/2 rotation per second
     
     def __init__(self):
 
         # Magic number copied from Java example
+        # Change these to depend on our wheelbase and track width, like the stuff near the end of __init__().
         self.frontLeftLocation = Translation2d(0.381, 0.381)
         self.frontRightLocation = Translation2d(0.381, -0.381)
         self.backLeftLocation = Translation2d(-0.381, 0.381)
@@ -39,6 +44,12 @@ class SwerveDrivetrain:
         self.backRight = SwerveModule(7, 8, 12, 13, 14, 15)
         self.swerve_modules = [ self.frontLeft, self.frontRight, self.backLeft, self.backRight ]
 
+        # Instead of an analog gyro, let's use the ADXRS450_Gyro class, like MAKO does in the mecanum folder. 
+        # See https://robotpy.readthedocs.io/projects/wpilib/en/stable/wpilib/ADXRS450_Gyro.html#wpilib.ADXRS450_Gyro
+        # and https://github.com/WHEARobotics/MAKO/blob/master/code/mecanum/robot.py
+        # You need to update here and where ever the gyro is used.  Note that the ADXRS450 outputs negative degrees
+        # for CCW, when we need positive.  It also doesn't have a getRotation2d() method, so you'll need to 
+        # make one with Rotation2d.fromDegrees().
         self.gyro = AnalogGyro(0) 
 
         # The proper Kinematics and Odometry class to used is determined by the number of modules on the robot.
@@ -60,6 +71,8 @@ class SwerveDrivetrain:
         # Where are the swerve modules located on the robot?
         # ? These values of 0.5 are taken from  https://github.com/4201VitruvianBots/2021SwerveSim/blob/main/WPILib_SwerveControllerCommand/src/main/java/frc/robot/Constants.java
         # But they seem odd. What units are they?
+        # They are probably meters, but the thing I don't understand is why they are different than the self.frontLeftLocation, etc. above.
+        # I suggest changing them to be the above --Rod
         wheel_base = 0.5
         track_width = 0.5
         half_wheel_base = wheel_base / 2
