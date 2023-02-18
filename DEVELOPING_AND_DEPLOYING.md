@@ -61,6 +61,24 @@ to commit, also add them the same way.
 # Troubleshooting
 
 If you deploy successfully, but you see that the "Robot Code" indicator on the Driver Station software goes back and forth between red and green, you may have
-a run-time error in your code.  Use the little gear icon to "view console", which will pop open a window with messages that come from the robot and the
-rest of the system.  Look for Python error dump traces.  There may be several lines showing errors in library code we are calling, but one of them will
+a run-time error in your code. 
+
+1. Open the FRC Driver Station window
+1. Click the gear icon on the left-hand side
+1. Click the gear icon that appears on the right-hand side
+
+![](docs/console_view_1.png)
+
+4. In the drop-down menu that appears, choose "View console"
+
+![](docs/console_view_2.png)
+
+You should see information printed from the robot code here. You should see here some indication of the error. Look for Python error dump traces.  There may be several lines showing errors in library code we are calling, but one of them will
 indicate a line number in robot.py.  That's the one to look at.
+
+The below image shows the console view after the robot code was deployed successfully. You can
+see information coming from **nt* (the network tables library) and from **robot** (our code).
+In this case, the robot code is properly seeing the limelight data in the `limelight` networktabe.
+
+![](docs/console_view_3.png)
+
