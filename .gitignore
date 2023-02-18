@@ -139,3 +139,4 @@ simgui*
 # Pycharm files
 .idea/
 .DS_Store
+networktables.json
