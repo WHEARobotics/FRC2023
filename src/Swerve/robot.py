@@ -5,14 +5,18 @@ import ctre
 import wpilib.drive
 #import cv2
 
+
+
+
 class Myrobot(wpilib.TimedRobot):
 
-    #WHEELCIRCUMFERENCE = WHEELDIAMETER * pi
     WHEELDIAMETER = 4 * 0.0254 #4 inch diameter for the wheel times the conversion to meters
     TRACKWIDTH = 22.25 * 0.0254 #both back and front have the module center to other mod center as 22 and 1/4th
     WHEELBASE = 22.75 * 0.0254 #left side of front mod to back mod #right is 26 7/8
     TURNING_GEAR_RATIO = 150.0/7.0 # Docs call it a 150/7:1
     DRIVE_GEAR_RATIO = 6.75
+    #WHEELCIRCUMFERENCE = WHEELDIAMETER * pi
+
 
     #encoder motor values for the absolute position CANCoders in degrees
     ABSOLUTEPOS_3: 32.959   # Back Right
@@ -23,15 +27,55 @@ class Myrobot(wpilib.TimedRobot):
     #turn angle invert: yes
     #drive invert: no
 
+    kSlotIdx = 0 
+
+    kPIDLoopIdx = 0
+
+    kTimeoutMs = 10
+
     def robotInit(self):
+
+
+        #self.drive = ctre.TalonFX(1)
+        self.twist = ctre.TalonFX(10)
+        self.encFour = ctre.sensors.CANCoder(4)
+
+        self.targetPos = 0
+
+
+        self.twist.configNominalOutputForward(0, self.kTimeoutMs)
+        self.twist.configNominalOutputReverse(0, self.kTimeoutMs)
+        self.twist.configPeakOutputForward(1, self.kTimeoutMs)
+        self.twist.configPeakOutputReverse(-1, self.kTimeoutMs)
+
+        self.twist.configAllowableClosedloopError(0, self.kPIDLoopIdx, self.kTimeoutMs)
+
+        self.twist.selectProfileSlot(self.kSlotIdx, self.kPIDLoopIdx)
+        self.twist.config_kF(0, 0, self.kTimeoutMs)
+        self.twist.config_kP(0, 0.3, self.kTimeoutMs)
+        self.twist.config_kI(0, 0, self.kTimeoutMs)
+        self.twist.config_kD(0, 0, self.kTimeoutMs)
+
+        self.encFour.configMagnetOffset(106.424)#we used cancoder configuration class when we were supposed to just use cancoder class remember that mistake
+
+
+        absolutePos = self.encFour.getAbsolutePosition()
+
+        initPos = self.degrees_to_counts(absolutePos)
+
+        self.twist.setSelectedSensorPosition(initPos, self.kPIDLoopIdx, self.kTimeoutMs)
+
+
+
+
+
 
         # self.wiggleTimer = wpilib.Timer()
 
         # self.joystickR = wpilib.Joystick(0) #//Check the steps commented below for what to start putting back in for testing but this will be taken out
         # self.joystickL = wpilib.Joystick(1)
     
-        # self.xbox = wpilib.XboxController(1) #you can choose between using the xbox code or joystick but xbox is what well be sticking with
-
+        self.xbox = wpilib.XboxController(1) #you can choose between using the xbox code or joystick but xbox is what well be sticking with
 
         # self.frontLeft = ctre.TalonFX(8)
         # self.frontRight = ctre.TalonFX(6)
@@ -44,6 +88,9 @@ class Myrobot(wpilib.TimedRobot):
         # self.claw = ctre.TalonFX(4)
 
         # self.frontLeft.setInverted(False) # 
+
+        
+        self.twist.setInverted(True)
         
         # self.frontRight.setInverted(True) # 
         # self.backLeft.setInverted(False) # 
@@ -153,7 +200,7 @@ class Myrobot(wpilib.TimedRobot):
 
         # #arm motor
         # #value of the arm = getthebutton
-        # #arm_command1 x= self.xbox.getBButton()
+        # #arm_command1 x=                        self.xbox.getBButton()
         # #value of the arm = getanothterbutton
         # #arm_command2 = -self.xbox.getAButton()
 
@@ -182,7 +229,31 @@ class Myrobot(wpilib.TimedRobot):
         # position = self.testmotor.getSelectedSensorPosition()
         # # wposition = self.wristjoint.getSelectedSensorPosition()
         # wpilib.SmartDashboard.putString('DB/String 7',"Position: {:4.2f}".format(position / self.armUpperPos))
+
+    
         
+        
+        twistPosition = self.encFour.getAbsolutePosition()#getting absolute sensor position wont  work make sure to skip sensor part
+        #get magnet offset is under CANCoder and CANCoder configuration classes    USE CANCODER ONLY!!!
+
+       
+        
+        wpilib.SmartDashboard.putString('DB/String 7',"Position: {:4.2f}".format(twistPosition))
+
+
+
+
+        if self.xbox.getAButton():
+            targetPos = self.degrees_to_counts(270)
+            self.twist.set(ctre._ctre.ControlMode.Position, targetPos)
+        else:
+            targetPos = self.degrees_to_counts(0)
+            self.twist.set(ctre._ctre.ControlMode.Position, targetPos)
+
+
+
+
+
         # this is a block saying if B button on the xbox is pressed then it will move positively by .1 or else it wont move
         # if self.testmotor.getSelectedSensorPosition() < self.armUpperPos:
         #     if self.xbox.getBButton():
@@ -276,6 +347,14 @@ class Myrobot(wpilib.TimedRobot):
         #     self.wristjoint.set(ctre._ctre.ControlMode.PercentOutput, -0.1)
         # else:
         #     self.wristjoint.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+
+    def degrees_to_counts(self, degrees):
+        counts = degrees * (2048/360) * self.TURNING_GEAR_RATIO
+        return counts
+    
+    def counts_to_degrees(self, counts):
+        degrees = counts * (360/2048) / self.TURNING_GEAR_RATIO
+        return degrees
 
     
 
