@@ -4,6 +4,9 @@ import wpilib
 import ctre
 import wpilib.drive
 #import cv2
+from SwerveModule import SwerveModule
+from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
+from wpimath.geometry import Rotation2d, Translation2d
 
 
 
@@ -27,43 +30,26 @@ class Myrobot(wpilib.TimedRobot):
     #turn angle invert: yes
     #drive invert: no
 
-    kSlotIdx = 0 
+    kSlotIdx = 0        #Falcons are awesome- we can have multiple PID loops stored for various 
+                        #...applications (this year we're good though).  So since we're only using one PID loop this year,
+                        #...we just need one slot (kind of like xbox(0)) when we only use one xbox controller 
 
-    kPIDLoopIdx = 0
+    kPIDLoopIdx = 0     #Nope - don't need this.
 
-    kTimeoutMs = 10
+    #kTimeoutMs = 10    #deleted this as a parameter since the default is 10ms.
 
     def robotInit(self):
 
 
         #self.drive = ctre.TalonFX(1)
-        self.twist = ctre.TalonFX(10)
-        self.encFour = ctre.sensors.CANCoder(4)
+        #self.twist = ctre.TalonFX(10)
+        #self.encFour = ctre.sensors.CANCoder(4)
 
-        self.targetPos = 0
+        
 
+        #self.encFour.configMagnetOffset(106.424)#we used cancoder configuration class when we were supposed to just use cancoder class remember that mistake
+        self.moduleFR = SwerveModule(1, 10, 4, 106.424)
 
-        self.twist.configNominalOutputForward(0, self.kTimeoutMs)
-        self.twist.configNominalOutputReverse(0, self.kTimeoutMs)
-        self.twist.configPeakOutputForward(1, self.kTimeoutMs)
-        self.twist.configPeakOutputReverse(-1, self.kTimeoutMs)
-
-        self.twist.configAllowableClosedloopError(0, self.kPIDLoopIdx, self.kTimeoutMs)
-
-        self.twist.selectProfileSlot(self.kSlotIdx, self.kPIDLoopIdx)
-        self.twist.config_kF(0, 0, self.kTimeoutMs)
-        self.twist.config_kP(0, 0.3, self.kTimeoutMs)
-        self.twist.config_kI(0, 0, self.kTimeoutMs)
-        self.twist.config_kD(0, 0, self.kTimeoutMs)
-
-        self.encFour.configMagnetOffset(106.424)#we used cancoder configuration class when we were supposed to just use cancoder class remember that mistake
-
-
-        absolutePos = self.encFour.getAbsolutePosition()
-
-        initPos = self.degrees_to_counts(absolutePos)
-
-        self.twist.setSelectedSensorPosition(initPos, self.kPIDLoopIdx, self.kTimeoutMs)
 
 
 
@@ -90,7 +76,7 @@ class Myrobot(wpilib.TimedRobot):
         # self.frontLeft.setInverted(False) # 
 
         
-        self.twist.setInverted(True)
+        #self.twist.setInverted(True)
         
         # self.frontRight.setInverted(True) # 
         # self.backLeft.setInverted(False) # 
@@ -129,7 +115,6 @@ class Myrobot(wpilib.TimedRobot):
         #print(f"Webcam is : {self.webcam}")  
 
 
-    #    self.drivetrain = wpilib.drive.MecanumDrive(self.frontLeft, self.backLeft, self.frontRight, self.backLeft)
     
     #// take out comments for setting motors to coast + for mecanum drive function
 
@@ -152,7 +137,9 @@ class Myrobot(wpilib.TimedRobot):
     #     wpilib.SmartDashboard.putNumber('DB/number 6',113)
 
     def disabledPeriodic(self):
-        pass
+        moduleState = self.moduleFR.getState()
+        wpilib.SmartDashboard.putString('DB/String 6',"Drive speed MPS: {:4.2f}".format(moduleState.speed))
+        wpilib.SmartDashboard.putString('DB/String 7',"Turning position Degrees: {:4.2f}".format(moduleState.angle.degrees()))
 
     def autonomousInit(self):
         #if self.wiggleTimer.hasElapsed(1)
@@ -229,27 +216,23 @@ class Myrobot(wpilib.TimedRobot):
         # position = self.testmotor.getSelectedSensorPosition()
         # # wposition = self.wristjoint.getSelectedSensorPosition()
         # wpilib.SmartDashboard.putString('DB/String 7',"Position: {:4.2f}".format(position / self.armUpperPos))
-
-    
-        
-        
-        twistPosition = self.encFour.getAbsolutePosition()#getting absolute sensor position wont  work make sure to skip sensor part
-        #get magnet offset is under CANCoder and CANCoder configuration classes    USE CANCODER ONLY!!!
-
        
         
-        wpilib.SmartDashboard.putString('DB/String 7',"Position: {:4.2f}".format(twistPosition))
-
+        moduleState = self.moduleFR.getState()
+        wpilib.SmartDashboard.putString('DB/String 6',"Drive speed MPS: {:4.2f}".format(moduleState.speed))
+        wpilib.SmartDashboard.putString('DB/String 7',"Turning position Degrees: {:4.2f}".format(moduleState.angle.degrees()))
 
 
 
         if self.xbox.getAButton():
-            targetPos = self.degrees_to_counts(270)
-            self.twist.set(ctre._ctre.ControlMode.Position, targetPos)
+            targetPos = 270                             #absolute encoder measures positive degrees as counterclockwise (when looking down at the module), so +90 degrees would be to the left.
+            targetVel = 1
         else:
-            targetPos = self.degrees_to_counts(0)
-            self.twist.set(ctre._ctre.ControlMode.Position, targetPos)
+            targetPos = 0
+            targetVel = 0
 
+        X = SwerveModuleState(targetVel, Rotation2d.fromDegrees(targetPos))
+        self.moduleFR.setDesiredState(X, True)
 
 
 
