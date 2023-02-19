@@ -1,11 +1,20 @@
 # !/usr/bin/env python3
 
+#ERRORS? 1 CHECK THE FIRMWARE AND RUN THE MOTOR THROUGH THERE 2 CHECK IF YOU CAN SPIN THE MOTOR MANUALY (WITH HAND)
+ 
 import wpilib
 import ctre
 import wpilib.drive
+
 #import cv2
 
 class Myrobot(wpilib.TimedRobot):
+
+    kPIDLoopIdx = 0
+
+    kTimeoutMs = 10
+
+    kSlotIdx  = 0
 
     def robotInit(self):
 
@@ -22,7 +31,7 @@ class Myrobot(wpilib.TimedRobot):
         # self.backLeft = ctre.TalonFX(9) 
         # self.backRight = ctre.TalonFX(5)
 
-        self.testmotor = ctre.TalonFX(4)
+        self.testmotor = ctre.TalonFX(7)
 
         # self.wristjoint = ctre.TalonFX(7)
         # self.claw = ctre.TalonFX(4)
@@ -32,7 +41,7 @@ class Myrobot(wpilib.TimedRobot):
         # self.frontRight.setInverted(True) # 
         # self.backLeft.setInverted(False) # 
         # self.backRight.setInverted(True) # 
-        self.testmotor.setInverted(True)
+        self.testmotor.setInverted(False)
 
         # self.frontLeft.setNeutralMode(ctre._ctre.NeutralMode.Coast)
         
@@ -44,12 +53,36 @@ class Myrobot(wpilib.TimedRobot):
         #self.wristjoint.setNeutralMode(ctre._ctre.NeutralMode.Brake)
 
         #Gear ratio is 10.71 for Falcon motor and 2048 is the motors counts in one revolution
-        self.armMPos = 2048 * 10.71 * 0.1
+        #self.armMPos = 2048 * 10.71 * 0.1
         #Lower Position for arm motor
-        self.armLowerPos = 0
+        #self.armLowerPos = 0
 
-        self.armUpperPos = 2048 * 10.71 * 0.2
+        #self.armUpperPos = (2048 * 80) * (115/360)
+
+        self.targetPos = (2048 * 80) * (115/360)
         
+        
+        self.testmotor.configNominalOutputForward(0, self.kTimeoutMs)
+        self.testmotor.configNominalOutputReverse(0, self.kTimeoutMs)
+        self.testmotor.configPeakOutputForward(1, self.kTimeoutMs)
+        self.testmotor.configPeakOutputReverse(-1, self.kTimeoutMs)#MAKE SURE THE PEAK AND NOMINAL OUTPUTS ARE NOT BOTH FORWARD OR BOTH REVERSE
+
+        
+        self.testmotor.selectProfileSlot(self.kSlotIdx, self.kPIDLoopIdx)
+        self.testmotor.config_kF(0, 0, self.kTimeoutMs)
+        self.testmotor.config_kP(0, 0.3, self.kTimeoutMs)
+        self.testmotor.config_kI(0, 0, self.kTimeoutMs)
+        self.testmotor.config_kD(0, 0, self.kTimeoutMs)
+
+        self.testmotor.configMotionCruiseVelocity(self.targetPos / 15, self.kTimeoutMs)
+        self.testmotor.configMotionAcceleration(self.targetPos / 30, self.kTimeoutMs)
+
+        self.testmotor.setSelectedSensorPosition(0, self.kPIDLoopIdx, self.kTimeoutMs)
+        
+
+                                                  
+
+
         # self.wristjointLowerPos = 0
 
         # self.wristjointUpperPos = 2048 * 12  * 0.2
@@ -107,10 +140,55 @@ class Myrobot(wpilib.TimedRobot):
         # self.wristjoint.setSelectedSensorPosition(0.0)
 
         self.state = 0
-        # self.wstate = 0
+         # self.wstate = 0
         
 
     def teleopPeriodic(self):
+
+       
+
+        #rTrigger = self.xbox.getRightTriggerAxis()
+        #AButton = self.xbox.getAButton()
+
+        motorPos = self.testmotor.getSelectedSensorPosition()
+        
+        wpilib.SmartDashboard.putString('DB/String 7',"Position: {:4.2f}".format(motorPos))
+       
+
+
+        rTrigger = self.xbox.getRightTriggerAxis()
+        AButton = self.xbox.getAButton()
+
+        wpilib.SmartDashboard.putString('DB/String 8',"Position: {:4.2f}".format(rTrigger))
+        
+        
+        if AButton:
+            self.testmotor.set(ctre._ctre.ControlMode.MotionMagic, self.targetPos)
+        elif self.xbox.getBButton():
+            self.testmotor.set(ctre._ctre.ControlMode.MotionMagic, 0)
+        else:
+            self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, rTrigger) 
+
+
+
+        '''
+        if AButton:
+                self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, self.targetPos)
+            elif self.xbox.getBButton():
+                self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, self.targetPos / 2)
+            else:
+                self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, rTrigger) 
+        '''
+        
+            
+  
+
+
+
+
+
+
+
         
         
 
@@ -162,10 +240,10 @@ class Myrobot(wpilib.TimedRobot):
         self.drivetrain.driveCartesian(move_y / 2, move_x  /2, move_z / 2)
         #self.drivetrain.driveCartesian(move_y / 4, move_x / 4, move_z / 4, -self.gyro.getAngle())
         '''
-        wpilib.SmartDashboard.putString('DB/String 4',"Time: {:3.2f}".format(self.wiggleTimer.get()))
-        position = self.testmotor.getSelectedSensorPosition()
+        #wpilib.SmartDashboard.putString('DB/String 4',"Time: {:3.2f}".format(self.wiggleTimer.get()))
+        #position = self.testmotor.getSelectedSensorPosition()
         # wposition = self.wristjoint.getSelectedSensorPosition()
-        wpilib.SmartDashboard.putString('DB/String 7',"Position: {:4.2f}".format(position / self.armUpperPos))
+        #wpilib.SmartDashboard.putString('DB/String 7',"Position: {:4.2f}".format(position / self.armUpperPos))
         
         # this is a block saying if B button on the xbox is pressed then it will move positively by .1 or else it wont move
         # if self.testmotor.getSelectedSensorPosition() < self.armUpperPos:
@@ -191,7 +269,7 @@ class Myrobot(wpilib.TimedRobot):
         # else:
         #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
 
-        
+        '''
         if self.state == 0:
             if self.xbox.getRightBumper():
                 if position < self.armMPos: 
@@ -208,9 +286,9 @@ class Myrobot(wpilib.TimedRobot):
                 #if 
 #            elif self.xbox.getBButton() and position >= self.armMPos:
 #                self.state = 2
-
+        '''
         #jay, zack, james
-
+        '''
         elif self.state == 1:
             if self.testmotor.getSelectedSensorPosition() >= self.armMPos: 
                 self.state = 0
@@ -236,7 +314,7 @@ class Myrobot(wpilib.TimedRobot):
             self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.25 )
         elif self.state == 4: 
             self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, -0.25 )
-        
+        '''
         
         # #tam
 
