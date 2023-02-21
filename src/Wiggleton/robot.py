@@ -18,6 +18,8 @@ class Myrobot(wpilib.TimedRobot):
 
     def robotInit(self):
 
+        self.ARM_GEAR_RATIO = 51
+
         self.wiggleTimer = wpilib.Timer()
 
         # self.joystickR = wpilib.Joystick(0) #//Check the steps commented below for what to start putting back in for testing but this will be taken out
@@ -31,7 +33,9 @@ class Myrobot(wpilib.TimedRobot):
         # self.backLeft = ctre.TalonFX(9) 
         # self.backRight = ctre.TalonFX(5)
 
-        self.testmotor = ctre.TalonFX(7)
+        #//self.testmotor = ctre.TalonFX(7)
+        self.armmotor = ctre.TalonFX(3)
+        self.armmotor2 = ctre.TalonFX(2)
 
         # self.wristjoint = ctre.TalonFX(7)
         # self.claw = ctre.TalonFX(4)
@@ -41,7 +45,8 @@ class Myrobot(wpilib.TimedRobot):
         # self.frontRight.setInverted(True) # 
         # self.backLeft.setInverted(False) # 
         # self.backRight.setInverted(True) # 
-        self.testmotor.setInverted(False)
+        
+        #//self.testmotor.setInverted(False)
 
         # self.frontLeft.setNeutralMode(ctre._ctre.NeutralMode.Coast)
         
@@ -49,7 +54,9 @@ class Myrobot(wpilib.TimedRobot):
         # self.backLeft.setNeutralMode(ctre._ctre.NeutralMode.Coast)
         # self.backRight.setNeutralMode(ctre._ctre.NeutralMode.Coast)
 
-        self.testmotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
+        #//self.testmotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
+
+        self.armmotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
         #self.wristjoint.setNeutralMode(ctre._ctre.NeutralMode.Brake)
 
         #Gear ratio is 10.71 for Falcon motor and 2048 is the motors counts in one revolution
@@ -60,8 +67,11 @@ class Myrobot(wpilib.TimedRobot):
         #self.armUpperPos = (2048 * 80) * (115/360)
 
         self.targetPos = (2048 * 80) * (115/360)
+        self.armUpperPos = 2048 * 51
         
         
+        #this is the wrist PID loop that can controll the motor deceleration and acceleration bettween certain points and with handling weight and pull better
+        '''
         self.testmotor.configNominalOutputForward(0, self.kTimeoutMs)
         self.testmotor.configNominalOutputReverse(0, self.kTimeoutMs)
         self.testmotor.configPeakOutputForward(1, self.kTimeoutMs)
@@ -78,6 +88,26 @@ class Myrobot(wpilib.TimedRobot):
         self.testmotor.configMotionAcceleration(self.targetPos / 30, self.kTimeoutMs)
 
         self.testmotor.setSelectedSensorPosition(0, self.kPIDLoopIdx, self.kTimeoutMs)
+        '''
+
+        self.armmotor.configNominalOutputForward(0, self.kTimeoutMs)
+        self.armmotor.configNominalOutputReverse(0, self.kTimeoutMs)
+        self.armmotor.configPeakOutputForward(1, self.kTimeoutMs)
+        self.armmotor.configPeakOutputReverse(-1, self.kTimeoutMs)#MAKE SURE THE PEAK AND NOMINAL OUTPUTS ARE NOT BOTH FORWARD OR BOTH REVERSE
+
+        
+        self.armmotor.selectProfileSlot(self.kSlotIdx, self.kPIDLoopIdx)
+        self.armmotor.config_kF(0, 0, self.kTimeoutMs)
+        self.armmotor.config_kP(0, 0.3, self.kTimeoutMs)
+        self.armmotor.config_kI(0, 0, self.kTimeoutMs)
+        self.armmotor.config_kD(0, 0, self.kTimeoutMs)
+
+        self.armmotor.configMotionCruiseVelocity(self.armUpperPos / 15, self.kTimeoutMs)
+        self.armmotor.configMotionAcceleration(self.armUpperPos / 30, self.kTimeoutMs)
+
+        self.armmotor.setSelectedSensorPosition(0, self.kPIDLoopIdx, self.kTimeoutMs)
+
+
         
 
                                                   
@@ -105,21 +135,25 @@ class Myrobot(wpilib.TimedRobot):
 
 
         # #makes the back motors follow the front motor movement
-        # self.backLeft.follow(self.frontLeft)      #// take out comments for follow command and test to see if it works if not keep back motors on 86-87
+        # self.backLeft.follow(self.frontLeft)     
         #self.backRight.follow(self.frontRight)
         #self.backRight.setInverted(ctre._ctre.InvertType.FollowMaster)
+
+        self.armmotor2.follow(self.armmotor)
+        self.armmotor2.setInverted(ctre._ctre.InvertType.OpposeMaster)
+
 
     def disabledInit(self): #fixed type 1/24/2022
         self.wiggleTimer.start()
 
-        wpilib.SmartDashboard.putString('DB/String 0',"system test")
-        wpilib.SmartDashboard.putString('DB/String 1',"system test")
-        wpilib.SmartDashboard.putString('DB/String 2',"system test")
-        wpilib.SmartDashboard.putString('DB/String 3',"system test")
+        #wpilib.SmartDashboard.putString('DB/String 0',"system test")
+        #wpilib.SmartDashboard.putString('DB/String 1',"system test")
+        #wpilib.SmartDashboard.putString('DB/String 2',"system test")
+        #wpilib.SmartDashboard.putString('DB/String 3',"system test")
         wpilib.SmartDashboard.putString('DB/String 4',"Time: {:3.2f}".format(self.wiggleTimer.get()))
 
-        wpilib.SmartDashboard.putNumber('DB/number 5',113)
-        wpilib.SmartDashboard.putNumber('DB/number 6',113)
+        #wpilib.SmartDashboard.putNumber('DB/number 5',113)
+        #wpilib.SmartDashboard.putNumber('DB/number 6',113)
 
     def disabledPeriodic(self):
         pass
@@ -136,11 +170,12 @@ class Myrobot(wpilib.TimedRobot):
         self.wiggleTimer.reset()
         self.wiggleTimer.start()
 
-        self.testmotor.setSelectedSensorPosition(0.0)
+        self.armmotor.setSelectedSensorPosition(0.0)
         # self.wristjoint.setSelectedSensorPosition(0.0)
 
         self.state = 0
          # self.wstate = 0
+       
         
 
     def teleopPeriodic(self):
@@ -150,24 +185,48 @@ class Myrobot(wpilib.TimedRobot):
         #rTrigger = self.xbox.getRightTriggerAxis()
         #AButton = self.xbox.getAButton()
 
-        motorPos = self.testmotor.getSelectedSensorPosition()
+        motorPos = self.armmotor.getSelectedSensorPosition()
+
+        motorDegrees = self.armCounts_to_degrees(motorPos)
+
+
         
-        wpilib.SmartDashboard.putString('DB/String 7',"Position: {:4.2f}".format(motorPos))
+        wpilib.SmartDashboard.putString('DB/String 7',"Pos_Degrees: {:4.2f}".format(motorDegrees))
+        wpilib.SmartDashboard.putString('DB/String 4',"Time: {:3.2f}".format(self.wiggleTimer.get()))
+
        
 
 
-        rTrigger = self.xbox.getRightTriggerAxis()
-        AButton = self.xbox.getAButton()
+        #//rTrigger = self.xbox.getRightTriggerAxis()
+        #AButton = self.xbox.getAButton()
+        #BButton = self.xbox.getBButton()
+        lBumper = self.xbox.getLeftBumper()
+        rBumper = self.xbox.getRightBumper()
+        lTrigger = self.xbox.getLeftTriggerAxis()
 
-        wpilib.SmartDashboard.putString('DB/String 8',"Position: {:4.2f}".format(rTrigger))
+
+        #wpilib.SmartDashboard.putString('DB/String 8',"Position: {:4.2f}".format(rTrigger))
         
-        
+        '''
         if AButton:
             self.testmotor.set(ctre._ctre.ControlMode.MotionMagic, self.targetPos)
-        elif self.xbox.getBButton():
+        elif BButton:
             self.testmotor.set(ctre._ctre.ControlMode.MotionMagic, 0)
         else:
-            self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, rTrigger) 
+            self.testmotor.set(ctre._ctre.ControlMode.PercentOutput, rTrigger)
+        '''
+
+
+        if lBumper:
+            self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.armUpperPos)
+        elif rBumper:
+            self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, 0)
+        else:
+            self.armmotor.set(ctre._ctre.ControlMode.PercentOutput, lTrigger)
+
+        wpilib.SmartDashboard.putString('DB/String 6',"Trigger: {:4.2f}".format(lTrigger))
+
+        self.armmotor.set(ctre._ctre.ControlMode.PercentOutput, lTrigger)
 
 
 
@@ -343,8 +402,22 @@ class Myrobot(wpilib.TimedRobot):
 
     #def teleopExit(self):
         #self.webcam.release()
+       
+    def armCounts_to_degrees(self, counts):
 
+        degrees = (counts * (360/2048)) / self.ARM_GEAR_RATIO
+        return degrees
 
+    
+    def armDegrees_to_counts(self, degrees):
+
+        counts = (degrees * (2048/360)) * self.ARM_GEAR_RATIO
+        return counts
+
+           
+            
+
+        
 
 if __name__ == '__main__':
     wpilib.run(Myrobot)
