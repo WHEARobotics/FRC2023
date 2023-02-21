@@ -73,7 +73,7 @@ class SwerveModule:                                                             
         self.turningMotor.config_kF(self.kSlotIdx, 0)              #a constant that, if we know how much to correct already, this can help us correct faster (Nascar vs. DriverPermit)
         self.turningMotor.config_kP(self.kSlotIdx, 0.3)            #proportion of how far off the current value is from the input. DOUBLE CHECK-READ 364 INFO: WE MIGHT NEED TO ADJUST THIS
         self.turningMotor.config_kI(self.kSlotIdx, 0)              #This takes how much error there is over time and uses it to help correct (high value = SUPERIMMEDIATECORRECT!!!
-                                                            #... lower value = LET'S CORRECT, BUT WE'LL BE A LITTLE MORE CAUTIOUS)
+                                                                   #... lower value = LET'S CORRECT, BUT WE'LL BE A LITTLE MORE CAUTIOUS)
         self.turningMotor.config_kD(self.kSlotIdx, 0)              #This senses how MUCH the error is off, and helps correct based on how much the error is
 
         self.absEnc.configMagnetOffset(absEncOffset)#we used cancoder configuration class when we were supposed to just use cancoder class remember that mistake
