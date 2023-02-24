@@ -4,6 +4,7 @@ from wpimath.kinematics import SwerveDrive4Kinematics, SwerveDrive4Odometry, Swe
 from wpimath.geometry import Translation2d, Rotation2d, Pose2d
 from wpimath.controller import PIDController
 from wpilib import AnalogGyro, Field2d, SmartDashboard
+import wpilib
 
 import wpimath.kinematics._kinematics
 import typing
@@ -44,8 +45,8 @@ class SwerveDrivetrain:
         self.backRightLocation = Translation2d(-half_wheel_base, -half_track_width)
 
                      
-        self.frontRight = SwerveModule(1, 10, 4, 106.424)
-        self.frontLeft = SwerveModule(5, 4, 1, 296.543)
+        self.frontRight = SwerveModule(1, 10, 4, 106.424)  #OG offset was 106.424
+        self.frontLeft = SwerveModule(5, 4, 1, 296.543)  #OG offset was 296.543
         self.backRight = SwerveModule(8, 9, 3, 32.959)
         self.backLeft = SwerveModule(6, 7, 2, 206.455)
         self.swerve_modules = [ self.frontLeft, self.frontRight, self.backLeft, self.backRight ]
@@ -56,8 +57,8 @@ class SwerveDrivetrain:
         # You need to update here and where ever the gyro is used.  Note that the ADXRS450 outputs negative degrees
         # for CCW, when we need positive.  It also doesn't have a getRotation2d() method, so you'll need to 
         # make one with Rotation2d.fromDegrees().
-        self.gyro = AnalogGyro(0)
-        #self.gyro = wpilib.ADXRS450_Gyro(wpilib._wpilib.SPI.Port.kOnboardCS0) 
+
+        self.gyro = wpilib.ADXRS450_Gyro(wpilib._wpilib.SPI.Port.kOnboardCS0) 
 
         # The proper Kinematics and Odometry class to used is determined by the number of modules on the robot.
         # For example, this 4 module robot uses SwerveDrive4Kinematics and SwerveDrive4Odometry.
@@ -139,20 +140,22 @@ class SwerveDrivetrain:
 
     def drive(self, xSpeed, ySpeed, rot, fieldRelative : bool) -> None:
         chassis_speeds = ChassisSpeeds(xSpeed, ySpeed, rot) if not fieldRelative \
-            else ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, Rotation2d.fromDegrees(self.gyro.getAngle()))
-        swerveModuleStates = self.kinematics.toSwerveModuleStates(chassis_speeds)
+            else ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, Rotation2d.fromDegrees(0.0))
+            # else ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, Rotation2d.fromDegrees(self.gyro.getAngle()))
+        self.swerveModuleStates = self.kinematics.toSwerveModuleStates(chassis_speeds)
 
-        swerveModuleStates = SwerveDrive4Kinematics.desaturateWheelSpeeds(swerveModuleStates, self.MAX_SPEED)
+        self.swerveModuleStates = SwerveDrive4Kinematics.desaturateWheelSpeeds(self.swerveModuleStates, self.MAX_SPEED)
 
-        self.frontLeft.setDesiredState(swerveModuleStates[0], True)
-        self.frontRight.setDesiredState(swerveModuleStates[1], True)
-        self.backLeft.setDesiredState(swerveModuleStates[2], True)
-        self.backRight.setDesiredState(swerveModuleStates[3], True)
+        self.frontLeft.setDesiredState(self.swerveModuleStates[0], True)
+        self.frontRight.setDesiredState(self.swerveModuleStates[1], True)
+        self.backLeft.setDesiredState(self.swerveModuleStates[2], True)
+        self.backRight.setDesiredState(self.swerveModuleStates[3], True)
 
 
     def _updateOdometry(self):
         self.odometry.update(
-            Rotation2d.fromDegrees(self.gyro.getAngle()),
+            Rotation2d.fromDegrees(0.0),
+            # Rotation2d.fromDegrees(self.gyro.getAngle()),
             self.frontLeft.getPosition(),
             self.frontRight.getPosition(),
             self.backLeft.getPosition(),
