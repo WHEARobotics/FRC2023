@@ -18,30 +18,36 @@ class SwerveDrivetrain:
     # Whether we use degrees or radians for angle is debatable:
     #  - radians is going to be slightly more efficient, to not be converting back and forth.
     #  - degrees is more familiar, and the performance hit may not be that great.
-    MAX_SPEED : meters_per_second = 3.0
-    MAX_ANGULAR_SPEED : radians_per_second = math.pi # 1/2 rotation per second
+    MAX_SPEED = 3.0
+    MAX_ANGULAR_SPEED = math.pi # 1/2 rotation per second
     
     def __init__(self):
 
+        wheel_base = 26.875 * 0.0254
+        track_width = 22.75 * 0.0254
+        half_wheel_base = wheel_base / 2
+        half_track_width = track_width / 2
+
         # Magic number copied from Java example
         # Change these to depend on our wheelbase and track width, like the stuff near the end of __init__().
-        self.frontLeftLocation = Translation2d(0.381, 0.381)
-        self.frontRightLocation = Translation2d(0.381, -0.381)
-        self.backLeftLocation = Translation2d(-0.381, 0.381)
-        self.backRightLocation = Translation2d(-0.381, -0.381)
 
-        
-        #UPDATE 2/3/2023: See lines 19-21 in SwerveModule.py for the full method parameters.
-                #EG- driveTalon(1), turnTalon(2), driveEncA(0), driveEncB(1), turnEncA(1), turnEncB(3)
-                # It looks like the motor controllers share the same CANbus ID as the Encoder Channel A, 
-                # but Encoder Channel B for each has their own ID on the CANbus)
-                # Since the ctre CANcoders will only take one parameter, we'll most likely be changing the code below to hold four arguements
-                
+        ### IMPORTANT!!!!! HALF_WHEEL_BASE and HALF_TRACK_WIDTH MIGHT NEED TO BE SWICHED ARROUND, BUT THE POSITIVE/NEGATIVE SIGNS ARE IN THE RIGHT LOCATION. ###
+
+        #self.frontLeftLocation = Translation2d(half_track_width, half_wheel_base)
+        #self.frontRightLocation = Translation2d(half_track_width, -half_wheel_base)
+        #self.backLeftLocation = Translation2d(-half_track_width, half_wheel_base)
+        #self.backRightLocation = Translation2d(-half_track_width, -half_wheel_base)
+
+        self.frontLeftLocation = Translation2d(half_wheel_base, half_track_width)
+        self.frontRightLocation = Translation2d(half_wheel_base, -half_track_width)
+        self.backLeftLocation = Translation2d(-half_wheel_base, half_track_width)
+        self.backRightLocation = Translation2d(-half_wheel_base, -half_track_width)
+
                      
-        self.frontLeft = SwerveModule(1, 2, 0, 1, 2, 3)  
-        self.frontRight = SwerveModule(3, 4, 4, 5, 6, 7)
-        self.backLeft = SwerveModule(5, 6, 8, 9, 10, 11)
-        self.backRight = SwerveModule(7, 8, 12, 13, 14, 15)
+        self.frontRight = SwerveModule(1, 10, 4, 106.424)
+        self.frontLeft = SwerveModule(5, 4, 1, 296.543)
+        self.backRight = SwerveModule(8, 9, 3, 32.959)
+        self.backLeft = SwerveModule(6, 7, 2, 206.455)
         self.swerve_modules = [ self.frontLeft, self.frontRight, self.backLeft, self.backRight ]
 
         # Instead of an analog gyro, let's use the ADXRS450_Gyro class, like MAKO does in the mecanum folder. 
@@ -50,7 +56,8 @@ class SwerveDrivetrain:
         # You need to update here and where ever the gyro is used.  Note that the ADXRS450 outputs negative degrees
         # for CCW, when we need positive.  It also doesn't have a getRotation2d() method, so you'll need to 
         # make one with Rotation2d.fromDegrees().
-        self.gyro = AnalogGyro(0) 
+        self.gyro = AnalogGyro(0)
+        #self.gyro = wpilib.ADXRS450_Gyro(wpilib._wpilib.SPI.Port.kOnboardCS0) 
 
         # The proper Kinematics and Odometry class to used is determined by the number of modules on the robot.
         # For example, this 4 module robot uses SwerveDrive4Kinematics and SwerveDrive4Odometry.
@@ -73,10 +80,7 @@ class SwerveDrivetrain:
         # But they seem odd. What units are they?
         # They are probably meters, but the thing I don't understand is why they are different than the self.frontLeftLocation, etc. above.
         # I suggest changing them to be the above --Rod
-        wheel_base = 0.5
-        track_width = 0.5
-        half_wheel_base = wheel_base / 2
-        half_track_width = track_width / 2
+
         self.module_positions = [
             # Front left
             Translation2d(half_wheel_base, half_track_width),
@@ -87,7 +91,18 @@ class SwerveDrivetrain:
             # Back right
             Translation2d(-half_wheel_base, -half_track_width)
         ]
-
+        """
+        self.module_positions = [
+            # Front left
+            Translation2d(half_wheel_base, half_track_width),
+            # Front right
+            Translation2d(half_wheel_base, -half_track_width),
+            # Back left
+            Translation2d(-half_wheel_base, half_track_width),
+            # Back right
+            Translation2d(-half_wheel_base, -half_track_width)
+        ]
+        """
         # The current pose for each swerve module
         # These values are updated in `periodic()`
         self.module_poses = [
@@ -122,22 +137,22 @@ class SwerveDrivetrain:
         self.fieldSim.getObject("Swerve Modules").setPoses(self.module_poses)
 
 
-    def drive(self, xSpeed : meters_per_second, ySpeed : meters_per_second, rot : radians_per_second, fieldRelative : bool) -> None:
+    def drive(self, xSpeed, ySpeed, rot, fieldRelative : bool) -> None:
         chassis_speeds = ChassisSpeeds(xSpeed, ySpeed, rot) if not fieldRelative \
-            else ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, self.gyro.getRotation2d())
+            else ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, Rotation2d.fromDegrees(self.gyro.getAngle()))
         swerveModuleStates = self.kinematics.toSwerveModuleStates(chassis_speeds)
 
         swerveModuleStates = SwerveDrive4Kinematics.desaturateWheelSpeeds(swerveModuleStates, self.MAX_SPEED)
 
-        self.frontLeft.setDesiredState(swerveModuleStates[0])
-        self.frontRight.setDesiredState(swerveModuleStates[1])
-        self.backLeft.setDesiredState(swerveModuleStates[2])
-        self.backRight.setDesiredState(swerveModuleStates[3])
+        self.frontLeft.setDesiredState(swerveModuleStates[0], True)
+        self.frontRight.setDesiredState(swerveModuleStates[1], True)
+        self.backLeft.setDesiredState(swerveModuleStates[2], True)
+        self.backRight.setDesiredState(swerveModuleStates[3], True)
 
 
     def _updateOdometry(self):
         self.odometry.update(
-            self.gyro.getRotation2d(),
+            Rotation2d.fromDegrees(self.gyro.getAngle()),
             self.frontLeft.getPosition(),
             self.frontRight.getPosition(),
             self.backLeft.getPosition(),
@@ -145,13 +160,13 @@ class SwerveDrivetrain:
         )
 
     def get_heading(self) -> Rotation2d:
-        return self.gyro.getRotation2d()
+        return Rotation2d.fromDegrees(self.gyro.getAngle())
 
     def get_pose(self) -> Pose2d :
         return self.odometry.getPose()
 
     @classmethod
-    def getMaxSpeed(cls) -> meters_per_second:
+    def getMaxSpeed(cls):
         return cls.MAX_SPEED
 
 
