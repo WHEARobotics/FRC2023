@@ -138,6 +138,9 @@ class Myrobot(wpilib.TimedRobot):
 
 
 
+
+
+
     
         
         #this makes the armmotor2 follow the other one but the oppose master makes it go the opposite direction from the motor it follows
