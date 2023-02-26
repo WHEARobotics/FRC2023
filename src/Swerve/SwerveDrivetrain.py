@@ -3,7 +3,7 @@ from __future__ import annotations
 from wpimath.kinematics import SwerveDrive4Kinematics, SwerveDrive4Odometry, SwerveModulePosition, SwerveModuleState, ChassisSpeeds
 from wpimath.geometry import Translation2d, Rotation2d, Pose2d
 from wpimath.controller import PIDController
-from wpilib import AnalogGyro, Field2d, SmartDashboard
+from wpilib import Field2d, SmartDashboard
 import wpilib
 
 import wpimath.kinematics._kinematics
@@ -50,6 +50,8 @@ class SwerveDrivetrain:
         self.backRight = SwerveModule(8, 9, 3, 32.959)
         self.backLeft = SwerveModule(6, 7, 2, 206.455)
         self.swerve_modules = [ self.frontLeft, self.frontRight, self.backLeft, self.backRight ]
+
+        self.swerveModuleStates = [SwerveModuleState(), SwerveModuleState(), SwerveModuleState(), SwerveModuleState()]
 
         # Instead of an analog gyro, let's use the ADXRS450_Gyro class, like MAKO does in the mecanum folder. 
         # See https://robotpy.readthedocs.io/projects/wpilib/en/stable/wpilib/ADXRS450_Gyro.html#wpilib.ADXRS450_Gyro
@@ -140,8 +142,7 @@ class SwerveDrivetrain:
 
     def drive(self, xSpeed, ySpeed, rot, fieldRelative : bool) -> None:
         chassis_speeds = ChassisSpeeds(xSpeed, ySpeed, rot) if not fieldRelative \
-            else ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, Rotation2d.fromDegrees(0.0))
-            # else ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, Rotation2d.fromDegrees(self.gyro.getAngle()))
+            else ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, Rotation2d.fromDegrees(-self.gyro.getAngle()))
         self.swerveModuleStates = self.kinematics.toSwerveModuleStates(chassis_speeds)
 
         self.swerveModuleStates = SwerveDrive4Kinematics.desaturateWheelSpeeds(self.swerveModuleStates, self.MAX_SPEED)
@@ -154,8 +155,7 @@ class SwerveDrivetrain:
 
     def _updateOdometry(self):
         self.odometry.update(
-            Rotation2d.fromDegrees(0.0),
-            # Rotation2d.fromDegrees(self.gyro.getAngle()),
+            Rotation2d.fromDegrees(-self.gyro.getAngle()),
             self.frontLeft.getPosition(),
             self.frontRight.getPosition(),
             self.backLeft.getPosition(),
@@ -163,7 +163,7 @@ class SwerveDrivetrain:
         )
 
     def get_heading(self) -> Rotation2d:
-        return Rotation2d.fromDegrees(self.gyro.getAngle())
+        return Rotation2d.fromDegrees(-self.gyro.getAngle())
 
     def get_pose(self) -> Pose2d :
         return self.odometry.getPose()

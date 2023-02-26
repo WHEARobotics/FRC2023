@@ -32,6 +32,8 @@ class Myrobot(wpilib.TimedRobot):
 
     def robotInit(self):
 
+        self.halfSpeed = False
+
         self.swerve = SwerveDrivetrain()
 
         self.xSpeedLimiter = SlewRateLimiter(3)
@@ -82,17 +84,17 @@ class Myrobot(wpilib.TimedRobot):
         modBRCAN = self.swerve.backRight.absEnc.getAbsolutePosition()
         modBLCAN = self.swerve.backLeft.absEnc.getAbsolutePosition()
 
-        # wpilib.SmartDashboard.putString('DB/String 0',"FR: {:4.2f}{:4.2f}".format(moduleFRState.angle.degrees() % 360, modFRCAN % 360))
-        # wpilib.SmartDashboard.putString('DB/String 1',"FL: {:4.2f}{:4.2f}".format(moduleFLState.angle.degrees() % 360, modFLCAN % 360))
-        # wpilib.SmartDashboard.putString('DB/String 2',"BR: {:4.2f}{:4.2f}".format(moduleBRState.angle.degrees() % 360, modBRCAN % 360))
-        # wpilib.SmartDashboard.putString('DB/String 3',"BL: {:4.2f}{:4.2f}".format(moduleBLState.angle.degrees() % 360, modBLCAN % 360))
+        wpilib.SmartDashboard.putString('DB/String 0',"FR: {:4.1f}  {:4.1f}".format(moduleFRState.angle.degrees() % 360, modFRCAN % 360))
+        wpilib.SmartDashboard.putString('DB/String 1',"FL: {:4.1f}  {:4.1f}".format(moduleFLState.angle.degrees() % 360, modFLCAN % 360))
+        wpilib.SmartDashboard.putString('DB/String 2',"BR: {:4.1f}  {:4.1f}".format(moduleBRState.angle.degrees() % 360, modBRCAN % 360))
+        wpilib.SmartDashboard.putString('DB/String 3',"BL: {:4.1f}  {:4.1f}".format(moduleBLState.angle.degrees() % 360, modBLCAN % 360))
 
-        # wpilib.SmartDashboard.putString('DB/String 5',"FR: {:4.2f}{:4.2f}".format(self.swerve.swerveModuleStates[1].angle.degrees() % 360, moduleFRState.speed))
-        # wpilib.SmartDashboard.putString('DB/String 6',"FL: {:4.2f}{:4.2f}".format(self.swerve.swerveModuleStates[0].angle.degrees() % 360, moduleFLState.speed))
-        # wpilib.SmartDashboard.putString('DB/String 7',"BR: {:4.2f}{:4.2f}".format(self.swerve.swerveModuleStates[3].angle.degrees() % 360, moduleBRState.speed))
-        # wpilib.SmartDashboard.putString('DB/String 8',"BL: {:4.2f}{:4.2f}".format(self.swerve.swerveModuleStates[2].angle.degrees() % 360, moduleBLState.speed))
+        wpilib.SmartDashboard.putString('DB/String 5',"FR: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[1].angle.degrees() % 360, moduleFRState.speed))
+        wpilib.SmartDashboard.putString('DB/String 6',"FL: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[0].angle.degrees() % 360, moduleFLState.speed))
+        wpilib.SmartDashboard.putString('DB/String 7',"BR: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[3].angle.degrees() % 360, moduleBRState.speed))
+        wpilib.SmartDashboard.putString('DB/String 8',"BL: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[2].angle.degrees() % 360, moduleBLState.speed))
 
-        # wpilib.SmartDashboard.putString('DB/String 9',"robot angle: {:4.2f}".format(self.swerve.get_heading().degrees()))
+        wpilib.SmartDashboard.putString('DB/String 9',"robot angle: {:4.2f}".format(self.swerve.get_heading().degrees() % 360))
 
 
 
@@ -147,6 +149,7 @@ class Myrobot(wpilib.TimedRobot):
         self.wiggleTimer.reset()
         self.wiggleTimer.start()
         #self.wiggleTimer.restart()
+        self.swerve.gyro.reset()
         
 
     def teleopPeriodic(self):
@@ -180,7 +183,7 @@ class Myrobot(wpilib.TimedRobot):
         wpilib.SmartDashboard.putString('DB/String 7',"BR: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[3].angle.degrees() % 360, moduleBRState.speed))
         wpilib.SmartDashboard.putString('DB/String 8',"BL: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[2].angle.degrees() % 360, moduleBLState.speed))
 
-        wpilib.SmartDashboard.putString('DB/String 9',"robot angle: {:4.2f}".format(self.swerve.get_heading().degrees()))
+        wpilib.SmartDashboard.putString('DB/String 9',"robot angle: {:4.2f}".format(self.swerve.get_heading().degrees() % 360))
         # wpilib.SmartDashboard.putString('DB/String 4',"Mod4TurnEnc: {:4.2f}".format(self.mod4turnEnc % 360))
 
 
@@ -201,48 +204,65 @@ class Myrobot(wpilib.TimedRobot):
         wpilib.SmartDashboard.putString('DB/String 9',"")
 
     def driveWithJoystick(self, fieldRelative: bool) -> None:
+        
 
-        # Get the x speed. We are inverting this because Xbox controllers return
-        # negative values when we push forward.
-        joystick_y = -self.xbox.getLeftY()
-        joystick_y = applyDeadband(joystick_y, 0.02)
-        ###xSpeed = self.xSpeedLimiter.calculate(joystick_y) * SwerveDrivetrain.getMaxSpeed()
+        if self.xbox.getRawButton(10):
+            self.halfSpeed = True
+        elif self.xbox.getRawButton(9):
+            self.halfSpeed = False
+        
 
-        # Get the y speed. We are inverting this because Xbox controllers return
-        # negative values when we push to the left.
+        if self.halfSpeed == False:
 
-        joystick_x = -self.xbox.getLeftX()
-        joystick_x = applyDeadband(joystick_x, 0.02)
-        ###ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
+            # Get the x speed. We are inverting this because Xbox controllers return
+            # negative values when we push forward.
+            joystick_y = -self.xbox.getLeftY()
+            joystick_y = applyDeadband(joystick_y, 0.02)
+            xSpeed = self.xSpeedLimiter.calculate(joystick_y) * SwerveDrivetrain.getMaxSpeed()
+
+            # Get the y speed. We are inverting this because Xbox controllers return
+            # negative values when we push to the left.
+            joystick_x = -self.xbox.getLeftX()
+            joystick_x = applyDeadband(joystick_x, 0.02)
+            ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
+
+        elif self.halfSpeed == True:
+            joystick_y = -self.xbox.getLeftY() / 2
+            joystick_y = applyDeadband(joystick_y, 0.02)
+            xSpeed = self.xSpeedLimiter.calculate(joystick_y) * SwerveDrivetrain.getMaxSpeed()
+
+            joystick_x = -self.xbox.getLeftX() / 2
+            joystick_x = applyDeadband(joystick_x, 0.02)
+            ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
 
 
         # Get the rate of angular rotation. We are inverting this because we want a
         # positive value when we pull to the left (remember, CCW is positive in
         # mathematics). Xbox controllers return positive values when you pull to
         # the right by default.
-        """
+        
         rot = -self.xbox.getRightX()
         rot = applyDeadband(rot, 0.02)
         rot = self.rotLimiter.calculate(rot) * SwerveDrivetrain.MAX_ANGULAR_SPEED
-        """
+        
 
         # below is code writtenby Rod, 
-        rot = 0.0 # Never rotate.
-        if self.xbox.getYButton():
-            xSpeed = 1.0 # m/sec
-            ySpeed = 1.0
-        elif self.xbox.getAButton():
-            xSpeed = -1.0 # m/sec
-            ySpeed = 0.0
-        elif self.xbox.getXButton():
-            xSpeed = 0.0 # m/sec
-            ySpeed = 1.0
-        elif self.xbox.getBButton():
-            xSpeed = -1.0 # m/sec
-            ySpeed = 1.0
-        else:
-            xSpeed = 0.0 # No button pressed, stop.
-            ySpeed = 0.0
+        # rot = 0.0 # Never rotate.
+        # if self.xbox.getYButton():
+        #     xSpeed = 1.0 # m/sec
+        #     ySpeed = 1.0
+        # elif self.xbox.getAButton():
+        #     xSpeed = -1.0 # m/sec
+        #     ySpeed = 0.0
+        # elif self.xbox.getXButton():
+        #     xSpeed = 0.0 # m/sec
+        #     ySpeed = 1.0
+        # elif self.xbox.getBButton():
+        #     xSpeed = -1.0 # m/sec
+        #     ySpeed = 1.0
+        # else:
+        #     xSpeed = 0.0 # No button pressed, stop.
+        #     ySpeed = 0.0
 
         self.swerve.drive(xSpeed, ySpeed, rot, fieldRelative)
 
