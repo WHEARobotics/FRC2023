@@ -54,8 +54,6 @@ class SwerveModule:                                                             
         self.driveMotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
         self.turningMotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
 
-        #self.targetPos = 0                       #target pos is used in teleop periodic, we would set it to the joystick rotation, and set the motor pos to the target pos
-
         #We'll need to set these up for the drive motor
         self.turningMotor.configNominalOutputForward(0)
         self.turningMotor.configNominalOutputReverse(0)
@@ -89,7 +87,8 @@ class SwerveModule:                                                             
         # Does this constant mean we're using radians?                              #A: 2/3/2023- YES!!  Let's do it!!!
         self.MODULE_MAX_ANGULAR_ACCELERATION = 2 * math.pi
 
-        self.MAX_SPEED = 5     #6380 rpm * (4in * 0.0254 * 3.14) / 6.75 / 60 = 5.02 METERS PER SECOND unweighted
+        self.MAX_SPEED = 3     #6380 rpm * (4in * 0.0254 * 3.14) / 6.75 / 60 = 5.02 METERS PER SECOND unweighted
+                        #we made max speed = 3, to match the max speed vaiable in SwerveDrivetrain.py
 
         
         #   2/3/2023- USE THIS METHOD:ctre.sensors.CANCoder(deviceNumber: int)

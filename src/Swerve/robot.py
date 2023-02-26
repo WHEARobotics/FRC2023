@@ -211,8 +211,16 @@ class Myrobot(wpilib.TimedRobot):
         elif self.xbox.getRawButton(9):
             self.halfSpeed = False
         
+        if self.halfSpeed == True:
+            joystick_y = -self.xbox.getLeftY() / 2
+            joystick_y = applyDeadband(joystick_y, 0.02)
+            xSpeed = self.xSpeedLimiter.calculate(joystick_y) * SwerveDrivetrain.getMaxSpeed()
 
-        if self.halfSpeed == False:
+            joystick_x = -self.xbox.getLeftX() / 2
+            joystick_x = applyDeadband(joystick_x, 0.02)
+            ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
+        
+        else:
 
             # Get the x speed. We are inverting this because Xbox controllers return
             # negative values when we push forward.
@@ -226,16 +234,9 @@ class Myrobot(wpilib.TimedRobot):
             joystick_x = applyDeadband(joystick_x, 0.02)
             ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
 
-        elif self.halfSpeed == True:
-            joystick_y = -self.xbox.getLeftY() / 2
-            joystick_y = applyDeadband(joystick_y, 0.02)
-            xSpeed = self.xSpeedLimiter.calculate(joystick_y) * SwerveDrivetrain.getMaxSpeed()
-
-            joystick_x = -self.xbox.getLeftX() / 2
-            joystick_x = applyDeadband(joystick_x, 0.02)
-            ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
 
 
+            
         # Get the rate of angular rotation. We are inverting this because we want a
         # positive value when we pull to the left (remember, CCW is positive in
         # mathematics). Xbox controllers return positive values when you pull to
