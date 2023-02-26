@@ -36,11 +36,11 @@ class Myrobot(wpilib.TimedRobot):
 
         self.PEAK_ARM_FF = 0.07 #this is the amount of output we need in the motor to hold itself when it is in its desired position
 
-        self.WRIST_GEAR_RATIO = 80 * 26 /11
+        self.WRIST_GEAR_RATIO = 80
 
-        self.WRIST_MAX = 115.0
+        self.WRIST_MAX = 0
 
-        self.WRIST_MIN = 0.0
+        self.WRIST_MIN = -115
 
         self.state = 0 #initializing the state for the arm
 
@@ -77,7 +77,7 @@ class Myrobot(wpilib.TimedRobot):
 
         self.groundLevel = self.armDegrees_to_counts(-63) 
 
-        self.feederStation = self.armDegrees_to_counts(17) 
+        #self.feederStation = self.armDegrees_to_counts(17) 
 
         self.midCube = self.armDegrees_to_counts(7) 
 
@@ -90,9 +90,11 @@ class Myrobot(wpilib.TimedRobot):
 
         #positons for wrist
         
-        self.wristDown = self.wristDegrees_to_counts(0)
+        self.wristGroudLevel = self.wristDegrees_to_counts(self.WRIST_MIN)
 
-        self.wristUp = self.wristDegrees_to_counts(115)
+        self.wristInnerPos = self.wristDegrees_to_counts(self.WRIST_MAX)
+
+
 
 
         
@@ -111,8 +113,9 @@ class Myrobot(wpilib.TimedRobot):
 
         wrist_Range_Counts = self.wristDegrees_to_counts(self.WRIST_MAX - self.WRIST_MIN)
 
-        self.wristmotor.configMotionCruiseVelocity(wrist_Range_Counts / 15, self.kTimeoutMs)
-        self.wristmotor.configMotionAcceleration(wrist_Range_Counts / 30, self.kTimeoutMs)
+        self.wristmotor.configMotionCruiseVelocity(wrist_Range_Counts / 7.5, self.kTimeoutMs)
+        self.wristmotor.configMotionAcceleration(wrist_Range_Counts / 5, self.kTimeoutMs)
+
         self.wristmotor.setSelectedSensorPosition(0, self.kPIDLoopIdx, self.kTimeoutMs)
         
 
@@ -167,9 +170,12 @@ class Myrobot(wpilib.TimedRobot):
 
         self.armmotor.setSelectedSensorPosition(self.armDegrees_to_counts(self.ARM_MIN))
         
-        #self.wristmotor.setSelectedSensorPosition(self.wristDown)
+        self.wristmotor.setSelectedSensorPosition(self.wristInnerPos) 
 
         self.state = 0
+
+        
+
        
         
 
@@ -182,23 +188,25 @@ class Myrobot(wpilib.TimedRobot):
 
         motorPos = self.armmotor.getSelectedSensorPosition()
 
-        #wristPos = self.wristmotor.getSelectedSensorPosition()
+        wristPos = self.wristmotor.getSelectedSensorPosition()
 
         Arm_Angle_Deg = self.armCounts_to_degrees(motorPos)
 
-        #Wrist_Angle_Deg = self.wristCounts_to_degrees(wristPos)
+        Wrist_Angle_Deg = self.wristCounts_to_degrees(wristPos)
+
+        
 
 
 
         
         wpilib.SmartDashboard.putString('DB/String 7',"Pos_Degrees: {:4.2f}".format(Arm_Angle_Deg))
         wpilib.SmartDashboard.putString('DB/String 4',"Time: {:3.2f}".format(self.wiggleTimer.get()))
-        #wpilib.SmartDashboard.putString('DB/String 8',"Position: {:4.2f}".format(Wrist_Angle_Deg))
+        wpilib.SmartDashboard.putString('DB/String 8',"Wrist_Pos_Deg: {:4.2f}".format(Wrist_Angle_Deg))
        
 
 
-        rTrigger = self.xbox.getRightTriggerAxis()
-        AButton = self.xbox.getAButton()
+        #rTrigger = self.xbox.getRightTriggerAxis()
+        #AButton = self.xbox.getAButton()
         #BButton = self.xbox.getBButton()
         lBumper = self.xbox.getLeftBumper()
         rBumper = self.xbox.getRightBumper()
@@ -206,9 +214,10 @@ class Myrobot(wpilib.TimedRobot):
         start = self.xbox.getStartButton() 
         lStickButton = self.xbox.getLeftStickButton()
         rStickButton = self.xbox.getRightStickButton()
+        back = self.xbox.getBackButton()
 
 
-        #wpilib.SmartDashboard.putString('DB/String 8',"Position: {:4.2f}".format(rTrigger))
+        wpilib.SmartDashboard.putString('DB/String 5',"Trigger: {:4.2f}".format(rTrigger))
         
         '''
         if AButton:
@@ -253,27 +262,40 @@ class Myrobot(wpilib.TimedRobot):
             self.state = 2
         elif lTrigger > 0.1:
             self.state = 3
-        elif rTrigger > 0.1:
-            self.state = 4
         elif start:
+            self.state = 4
+        elif back:
             self.state = 5
             
 
         # these are the actions dealing with the states
         if self.state == 0:
             self.armmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
-        elif self.state == 1:
-            self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.midCube) 
-        elif self.state == 2:
-            self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.midCone)
-        elif self.state == 3:
-            self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.highCube)
-        elif self.state == 4:
-            self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.feederStation)
-        elif self.state == 5:
-            self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.groundLevel)
+            self.wristmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
         else:
-            self.state = 0
+            if self.state == 1:
+                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.midCube) #sets the arm motor to desired height
+                self.wristDesiredPos = self.WRIST_MIN
+            elif self.state == 2:
+                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.midCone)
+                self.wristDesiredPos = self.WRIST_MIN 
+            elif self.state == 3:
+                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.highCube)
+                self.wristDesiredPos = self.WRIST_MIN 
+            elif self.state == 4:
+                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.groundLevel)
+                self.wristDesiredPos = self.WRIST_MIN 
+            elif self.state == 5:
+                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.groundLevel)
+                self.wristDesiredPos = self.WRIST_MAX 
+            else:
+                self.state = 0
+
+            Wrist_Convertion = self.wristDesiredPos -(63 + Arm_Angle_Deg) #takes the desired position (in or out) and compensates for the angle ofthe arm
+            self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristDegrees_to_counts(Wrist_Convertion))
+            #each time the code moves through the "else" states, it moves the arm to the desired position within that state, then passes the value of the wrist's desired position 
+            # to the function "self.wristmotor.set()" at the end.  Thus, unlike the arm being set in each state, the wrist's VALUE is set in each state, and that value
+            #is used to set the wrist position each time the "else" runs.
 
 
 
@@ -287,21 +309,22 @@ class Myrobot(wpilib.TimedRobot):
 
 
         
-        #Wrist Code
+        #Wrist Code #After Testing Update to be only using one button
+        '''
         if lStickButton:
-            self.wriststate = 2
-        elif rStickButton:
             self.wriststate = 1
+        elif rStickButton:
+            self.wriststate = 2
         
         if self.wriststate == 0:
             self.wristmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
         elif self.wriststate == 1:
-            self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristUp) 
+            self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristInnerPos) 
         elif self.wriststate == 2:
-            self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristDown)
+            self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristGroudLevel)
         else:
             self.wriststate = 0
-
+        '''
         
 
 
