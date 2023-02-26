@@ -53,8 +53,8 @@ class Myrobot(wpilib.TimedRobot):
 
        
         self.wristmotor = ctre.TalonFX(11)
-        self.armmotor = ctre.TalonFX(2)
-        #self.armmotor2 = ctre.TalonFX(2)
+        self.armmotor = ctre.TalonFX(3)
+        self.armmotor2 = ctre.TalonFX(2)
 
         # self.claw = ctre.TalonFX(4)
 
@@ -65,7 +65,7 @@ class Myrobot(wpilib.TimedRobot):
         self.wristmotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
 
         self.armmotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
-        #self.armmotor2.setNeutralMode(ctre._ctre.NeutralMode.Brake)
+        self.armmotor2.setNeutralMode(ctre._ctre.NeutralMode.Brake)
 
         #self.wristjoint.setNeutralMode(ctre._ctre.NeutralMode.Brake)
 
@@ -147,8 +147,8 @@ class Myrobot(wpilib.TimedRobot):
     
         
         #this makes the armmotor2 follow the other one but the oppose master makes it go the opposite direction from the motor it follows
-        #self.armmotor2.follow(self.armmotor)
-        #self.armmotor2.setInverted(ctre._ctre.InvertType.OpposeMaster)
+        self.armmotor2.follow(self.armmotor)
+        self.armmotor2.setInverted(ctre._ctre.InvertType.OpposeMaster)
 
 
     def disabledInit(self): #fixed type 1/24/2022
