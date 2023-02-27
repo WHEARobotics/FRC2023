@@ -122,10 +122,64 @@ class Myrobot(wpilib.TimedRobot):
         self.wiggleTimer.reset()
         self.wiggleTimer.start()
         #self.wiggleTimer.restart()
+        
+        self.autoState = 0
 
 
     def autonomousPeriodic(self):
         
+        fieldRelative = False
+
+        #if wpilib.SmartDashboard.give me the DB button
+        if self.autoState == 0:
+            xSpeed = 1
+            ySpeed = 0
+            rot = 0
+            self.wiggletimer.advanceIfElapsed(3)
+            self.autoState = 1
+        elif self.autoState == 1:
+            xSpeed = 1
+            ySpeed = 0
+            rot = 0
+            self.wiggleTimer.advanceIfElapsed(3)
+            self .autoState = 2
+        elif self. autoState == 2:
+            xSpeed = 1
+            ySpeed = 0
+            rot = 0
+            self.wiggleTimer.advanceIfElapsed(3)
+            self .autoState = 3
+        elif self.autoState == 3:
+            xSpeed = 1
+            ySpeed = 0
+            rot = 0
+            self.wiggleTimer.advanceIfElapsed(3)
+            self.autoState = 4
+        elif self. autoState == 4:
+            xSpeed = 1
+            ySpeed = 0
+            rot = 0
+            self.wiggleTimer.advanceIfElapsed(3)
+            self .autoState = 5
+        elif self. autoState == 5:
+            xSpeed = 1
+            ySpeed = 0
+            rot = 0
+            self.wiggleTimer.advanceIfElapsed(3)
+            self .autoState = 6
+        elif self. autoState == 6:
+            xSpeed = 1
+            ySpeed = 0
+            rot = 0
+            self.wiggleTimer.advanceIfElapsed(3)
+            self .autoState = 7
+        elif self.autoState == 7:
+            xSpeed = 0
+            ySpeed = 0
+            rot = 0
+
+        self.swerve.drive(xSpeed, ySpeed, rot, fieldRelative)
+
         pass
 
 
@@ -158,6 +212,11 @@ class Myrobot(wpilib.TimedRobot):
         self.driveWithJoystick(True)
         self.swerve.periodic()
 
+        #if we can't fix the gyro, Brock asked if he could reset in in the middle of a match.
+        #these button inputs are obviously subject to change
+        if self.xbox.getAButton and self.xbox.getBButton and self.xbox.getXButton:
+            self.swerve.gyro.reset
+
 
         moduleFRState = self.swerve.frontRight.getState()
         moduleFLState = self.swerve.frontLeft.getState()
@@ -167,11 +226,6 @@ class Myrobot(wpilib.TimedRobot):
         modFLCAN = self.swerve.frontLeft.absEnc.getAbsolutePosition()
         modBRCAN = self.swerve.backRight.absEnc.getAbsolutePosition()
         modBLCAN = self.swerve.backLeft.absEnc.getAbsolutePosition()
-
-        # wpilib.SmartDashboard.putString('DB/String 0',"speed MPS FR: {:4.2f}".format(moduleFRState.speed))
-        # wpilib.SmartDashboard.putString('DB/String 1',"speed MPS FL: {:4.2f}".format(moduleFLState.speed))
-        # wpilib.SmartDashboard.putString('DB/String 2',"speed MPS BR: {:4.2f}".format(moduleBRState.speed))
-        # wpilib.SmartDashboard.putString('DB/String 3',"speed MPS BL: {:4.2f}".format(moduleBLState.speed))
 
         wpilib.SmartDashboard.putString('DB/String 0',"FR: {:4.1f}  {:4.1f}".format(moduleFRState.angle.degrees() % 360, modFRCAN % 360))
         wpilib.SmartDashboard.putString('DB/String 1',"FL: {:4.1f}  {:4.1f}".format(moduleFLState.angle.degrees() % 360, modFLCAN % 360))
@@ -245,25 +299,6 @@ class Myrobot(wpilib.TimedRobot):
         rot = -self.xbox.getRightX()
         rot = applyDeadband(rot, 0.02)
         rot = self.rotLimiter.calculate(rot) * SwerveDrivetrain.MAX_ANGULAR_SPEED
-        
-
-        # below is code writtenby Rod, 
-        # rot = 0.0 # Never rotate.
-        # if self.xbox.getYButton():
-        #     xSpeed = 1.0 # m/sec
-        #     ySpeed = 1.0
-        # elif self.xbox.getAButton():
-        #     xSpeed = -1.0 # m/sec
-        #     ySpeed = 0.0
-        # elif self.xbox.getXButton():
-        #     xSpeed = 0.0 # m/sec
-        #     ySpeed = 1.0
-        # elif self.xbox.getBButton():
-        #     xSpeed = -1.0 # m/sec
-        #     ySpeed = 1.0
-        # else:
-        #     xSpeed = 0.0 # No button pressed, stop.
-        #     ySpeed = 0.0
 
         self.swerve.drive(xSpeed, ySpeed, rot, fieldRelative)
 
