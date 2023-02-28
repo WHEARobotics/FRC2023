@@ -16,6 +16,12 @@ from SwerveDrivetrain import SwerveDrivetrain
 
 class Myrobot(wpilib.TimedRobot):
 
+    kPIDLoopIdx = 0
+
+    kTimeoutMs = 10
+
+    kSlotIdx  = 0
+
     WHEELDIAMETER = 4 * 0.0254 #4 inch diameter for the wheel times the conversion to meters
     TRACKWIDTH = 22.25 * 0.0254 #both back and front have the module center to other mod center as 22 and 1/4th
     WHEELBASE = 22.75 * 0.0254 #left side of front mod to back mod #right is 26 7/8
@@ -25,12 +31,10 @@ class Myrobot(wpilib.TimedRobot):
 
 
     #encoder motor values for the absolute position CANCoders in degrees
-    ABSOLUTEPOS_3: 32.959   # Back Right
-    ABSOLUTEPOS_4: 106.424  # Front Right
-    ABSOLUTEPOS_2: 206.455  # Back Left
-    ABSOLUTEPOS_1: 296.543  # Front Left
 
     def robotInit(self):
+
+        self.wiggleTimer = wpilib.Timer()
 
         self.halfSpeed = False
 
@@ -39,20 +43,120 @@ class Myrobot(wpilib.TimedRobot):
         self.xSpeedLimiter = SlewRateLimiter(3)
         self.ySpeedLimiter = SlewRateLimiter(3)
         self.rotLimiter = SlewRateLimiter(3)
-
-        """
-        these inits are done in SwerveDrivetrain, which is called above, these inits are only used to print values to smartDashboard
-        """
-        # self.moduleFR = SwerveModule(1, 10, 4, 106.424)
-        # self.moduleFL = SwerveModule(5, 4, 1, 296.543)
-        # self.moduleBR = SwerveModule(8, 9, 3, 32.959)
-        # self.moduleBL = SwerveModule(6, 7, 2, 206.455)
-
-
-        self.wiggleTimer = wpilib.Timer()
     
-        self.xbox = wpilib.XboxController(1)
+        self.xboxD = wpilib.XboxController(1)#Driver xbox
+        self.xboxO = wpilib.XboxController(0)#Operator xbox
 
+        """inits below taken from Wiggleton robot.py"""
+        self.ARM_GEAR_RATIO = 35.7 * 4      #to get the gear ratio, we had 48 teeth from the sprocket and divided it from the output sahft which is 12, then we multiplied that from the gear ratio which is 12.75
+        
+        self.ARM_MIN = -63.0
+
+        self.ARM_HORIZONTAL = 0.0
+
+        self.ARM_MAX = 26.0 #might change to 13.0
+
+        self.PEAK_ARM_FF = 0.07 #this is the amount of output we need in the motor to hold itself when it is in its desired position
+
+        self.WRIST_GEAR_RATIO = 80
+
+        self.WRIST_START = 56  # 56 degrees from the "tucked in position"
+
+        self.WRIST_MAX = 0 # We're calling the "tucked in position" 0 degrees
+
+        self.WRIST_MIN = -115 # Degrees, wrist dropped in collecting position at the ground level.
+
+        self.wristDesiredPos = self.WRIST_START
+
+        #need to set a 
+
+        self.state = 0 #initializing the state for the arm
+
+        self.wristmotor = ctre.TalonFX(11)
+        self.armmotor = ctre.TalonFX(2)
+        self.armmotor2 = ctre.TalonFX(3)
+
+        # self.claw = ctre.TalonSRX(12)
+
+        
+        self.wristmotor.setInverted(False)
+
+    
+        self.wristmotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
+
+        self.armmotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
+        self.armmotor2.setNeutralMode(ctre._ctre.NeutralMode.Brake)
+
+        #this makes the armmotor2 follow the other one but the oppose master makes it go the opposite direction from the motor it follows
+        self.armmotor2.follow(self.armmotor)
+        self.armmotor2.setInverted(ctre._ctre.InvertType.OpposeMaster)
+
+        #these are all the positions that will be used for the arm
+
+        self.groundLevel = self.armDegrees_to_counts(-63) 
+
+        #self.feederStation = self.armDegrees_to_counts(17) 
+
+        self.midCube = self.armDegrees_to_counts(7) 
+
+        self.midCone = self.armDegrees_to_counts(13)
+
+        self.highCube = self.armDegrees_to_counts(17)
+        
+         
+        #35.7 then multiply by 4 for sprockets
+
+        #positons for wrist
+        
+        self.wristGroudLevel = self.wristDegrees_to_counts(self.WRIST_MIN)
+
+        self.wristInnerPos = self.wristDegrees_to_counts(self.WRIST_MAX)
+
+        #this is the wrist PID loop that can controll the motor deceleration and acceleration bettween certain points and with handling weight and pull better
+        
+        self.wristmotor.configNominalOutputForward(0, self.kTimeoutMs)
+        self.wristmotor.configNominalOutputReverse(0, self.kTimeoutMs)
+        self.wristmotor.configPeakOutputForward(1, self.kTimeoutMs)
+        self.wristmotor.configPeakOutputReverse(-1, self.kTimeoutMs)#MAKE SURE THE PEAK AND NOMINAL OUTPUTS ARE NOT BOTH FORWARD OR BOTH REVERSE
+        
+        self.wristmotor.selectProfileSlot(self.kSlotIdx, self.kPIDLoopIdx)
+        self.wristmotor.config_kF(0, 0, self.kTimeoutMs)
+        self.wristmotor.config_kP(0, 0.3, self.kTimeoutMs)
+        self.wristmotor.config_kI(0, 0, self.kTimeoutMs)
+        self.wristmotor.config_kD(0, 0, self.kTimeoutMs)
+
+        wrist_Range_Counts = self.wristDegrees_to_counts(self.WRIST_MAX - self.WRIST_MIN)
+
+        self.wristmotor.configMotionCruiseVelocity(wrist_Range_Counts / 7.5, self.kTimeoutMs)
+        self.wristmotor.configMotionAcceleration(wrist_Range_Counts / 5, self.kTimeoutMs)
+
+        self.wristmotor.setSelectedSensorPosition(self.wristDegrees_to_counts(self.WRIST_START), self.kPIDLoopIdx, self.kTimeoutMs) #MONDAY NIGHT- made it so that when it's in the wrist sensor initializes to 56deg.
+        
+
+        self.armmotor.configNominalOutputForward(0, self.kTimeoutMs)
+        self.armmotor.configNominalOutputReverse(0, self.kTimeoutMs)
+        self.armmotor.configPeakOutputForward(1, self.kTimeoutMs)
+        self.armmotor.configPeakOutputReverse(-1, self.kTimeoutMs)#MAKE SURE THE PEAK AND NOMINAL OUTPUTS ARE NOT BOTH FORWARD OR BOTH REVERSE
+        
+        
+        self.armmotor.selectProfileSlot(self.kSlotIdx, self.kPIDLoopIdx)
+        self.armmotor.config_kF(0, 0, self.kTimeoutMs)
+        self.armmotor.config_kP(0, 0.3, self.kTimeoutMs)
+        self.armmotor.config_kI(0, 0, self.kTimeoutMs)
+        self.armmotor.config_kD(0, 0, self.kTimeoutMs)
+
+        arm_Range_Counts = self.armDegrees_to_counts(self.ARM_MAX - self.ARM_MIN)
+
+        self.armmotor.configMotionCruiseVelocity(arm_Range_Counts / 10, self.kTimeoutMs)
+        self.armmotor.configMotionAcceleration(arm_Range_Counts / 10, self.kTimeoutMs)
+
+        #we need to have the arm on the lowest position when turned on
+        self.armmotor.setSelectedSensorPosition(self.armDegrees_to_counts(self.ARM_MIN))   
+
+        
+
+
+        """inits below are old vis code"""
 
         #vision subsystem
         #wpilib.CameraServer.launch("vision.py:main")
@@ -65,7 +169,7 @@ class Myrobot(wpilib.TimedRobot):
         #print(f"Webcam is : {self.webcam}")  
 
 
-    def disabledInit(self): #fixed type 1/24/2022
+    def disabledInit(self):
         
         self.wiggleTimer.reset()
         self.wiggleTimer.start()
@@ -84,6 +188,9 @@ class Myrobot(wpilib.TimedRobot):
         modBRCAN = self.swerve.backRight.absEnc.getAbsolutePosition()
         modBLCAN = self.swerve.backLeft.absEnc.getAbsolutePosition()
 
+        wristPos = self.wristmotor.getSelectedSensorPosition()
+        Wrist_Angle_Deg = self.wristCounts_to_degrees(wristPos)
+
         wpilib.SmartDashboard.putString('DB/String 0',"FR: {:4.1f}  {:4.1f}".format(moduleFRState.angle.degrees() % 360, modFRCAN % 360))
         wpilib.SmartDashboard.putString('DB/String 1',"FL: {:4.1f}  {:4.1f}".format(moduleFLState.angle.degrees() % 360, modFLCAN % 360))
         wpilib.SmartDashboard.putString('DB/String 2',"BR: {:4.1f}  {:4.1f}".format(moduleBRState.angle.degrees() % 360, modBRCAN % 360))
@@ -94,7 +201,8 @@ class Myrobot(wpilib.TimedRobot):
         wpilib.SmartDashboard.putString('DB/String 7',"BR: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[3].angle.degrees() % 360, moduleBRState.speed))
         wpilib.SmartDashboard.putString('DB/String 8',"BL: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[2].angle.degrees() % 360, moduleBLState.speed))
 
-        wpilib.SmartDashboard.putString('DB/String 9',"robot angle: {:4.2f}".format(self.swerve.get_heading().degrees() % 360))
+        # wpilib.SmartDashboard.putString('DB/String 9',"robot angle: {:4.2f}".format(self.swerve.get_heading().degrees() % 360))
+        wpilib.SmartDashboard.putString('DB/String 9',"Wrist_Pos_Deg: {:4.2f}".format(Wrist_Angle_Deg))
 
 
 
@@ -203,7 +311,18 @@ class Myrobot(wpilib.TimedRobot):
         self.wiggleTimer.reset()
         self.wiggleTimer.start()
         #self.wiggleTimer.restart()
+
+
+        # These three need to be removed for competition
         self.swerve.gyro.reset()
+        self.armmotor.setSelectedSensorPosition(self.armDegrees_to_counts(self.ARM_MIN))
+        self.wristmotor.setSelectedSensorPosition(self.wristDegrees_to_counts(self.WRIST_START)) #CHANGED MONDAY NIGHT- this was set at wrist inner, but we need it to initialize at wrist resting position (56deg) 
+
+        self.state = 0
+
+        # For teleop testing purposes, align the wheels before enabling.
+        # For the match, move the following statement to automomousInit().
+        self.swerve.resetSteering()
         
 
     def teleopPeriodic(self):
@@ -214,8 +333,8 @@ class Myrobot(wpilib.TimedRobot):
 
         #if we can't fix the gyro, Brock asked if he could reset in in the middle of a match.
         #these button inputs are obviously subject to change
-        if self.xbox.getAButton and self.xbox.getBButton and self.xbox.getXButton:
-            self.swerve.gyro.reset
+        if self.xboxD.getAButton() and self.xboxD.getBButton() and self.xboxD.getXButton():
+            self.swerve.gyro.reset()
 
 
         moduleFRState = self.swerve.frontRight.getState()
@@ -237,8 +356,93 @@ class Myrobot(wpilib.TimedRobot):
         wpilib.SmartDashboard.putString('DB/String 7',"BR: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[3].angle.degrees() % 360, moduleBRState.speed))
         wpilib.SmartDashboard.putString('DB/String 8',"BL: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[2].angle.degrees() % 360, moduleBLState.speed))
 
-        wpilib.SmartDashboard.putString('DB/String 9',"robot angle: {:4.2f}".format(self.swerve.get_heading().degrees() % 360))
+        #wpilib.SmartDashboard.putString('DB/String 9',"robot angle: {:4.2f}".format(self.swerve.get_heading().degrees() % 360))
         # wpilib.SmartDashboard.putString('DB/String 4',"Mod4TurnEnc: {:4.2f}".format(self.mod4turnEnc % 360))
+
+
+        """everything below is teleop periodic taken from Wiggleton robot.py"""
+
+        motorPos = self.armmotor.getSelectedSensorPosition()
+
+        wristPos = self.wristmotor.getSelectedSensorPosition()
+
+        Arm_Angle_Deg = self.armCounts_to_degrees(motorPos)
+
+        Wrist_Angle_Deg = self.wristCounts_to_degrees(wristPos)
+
+        
+
+
+
+        
+        wpilib.SmartDashboard.putString('DB/String 4',"Pos_Degrees: {:4.2f}".format(Arm_Angle_Deg))
+        #wpilib.SmartDashboard.putString('DB/String 4',"Time: {:3.2f}".format(self.wiggleTimer.get()))
+        wpilib.SmartDashboard.putString('DB/String 9',"Wrist_Pos_Deg: {:4.2f}".format(Wrist_Angle_Deg))
+       
+
+
+        #rTrigger = self.xbox.getRightTriggerAxis()
+        #AButton = self.xbox.getAButton()
+        #BButton = self.xbox.getBButton()
+        lBumper = self.xboxO.getLeftBumper()
+        rBumper = self.xboxO.getRightBumper()
+        lTrigger = self.xboxO.getLeftTriggerAxis()
+        start = self.xboxO.getStartButton() 
+        lStickButton = self.xboxO.getLeftStickButton()
+        rStickButton = self.xboxO.getRightStickButton()
+        back = self.xboxO.getBackButton()
+
+
+        if lBumper: #mid cube
+            self.state = 1
+        elif rBumper: #midcone 
+            self.state = 2
+        elif lTrigger > 0.1: #high cube
+            self.state = 3
+        elif start: #ground level wrist down
+            self.state = 4
+        elif back: #ground level wrist in
+            self.state = 5
+        elif lStickButton: # wrist in
+            self.state = 6
+        elif rStickButton: # wrist down
+            self.state = 7
+            
+
+        # these are the actions dealing with the states
+        if self.state == 0:
+            self.armmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+            self.wristmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+        else:
+            if self.state == 1:
+                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.midCube) #sets the arm motor to desired height
+                self.wristDesiredPos = self.WRIST_MIN
+            elif self.state == 2:
+                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.midCone)
+                self.wristDesiredPos = self.WRIST_MIN 
+            elif self.state == 3:
+                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.highCube)
+                self.wristDesiredPos = self.WRIST_MIN 
+            elif self.state == 4:
+                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.groundLevel)
+                self.wristDesiredPos = self.WRIST_MIN 
+            elif self.state == 5:
+                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.groundLevel)
+                self.wristDesiredPos = self.WRIST_MAX
+            elif self.state == 6:
+                #self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristInnerPos) 
+                self.wristDesiredPos = self.WRIST_MAX
+            elif self.state == 7:
+                #self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristGroudLevel)
+                self.wristDesiredPos = self.WRIST_MIN
+            else:
+                self.state = 0
+
+            Wrist_Convertion = self.wristDesiredPos -(63 + Arm_Angle_Deg) #takes the desired position (in or out) and compensates for the angle ofthe arm
+            self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristDegrees_to_counts(Wrist_Convertion))
+            #each time the code moves through the "else" states, it moves the arm to the desired position within that state, then passes the value of the wrist's desired position 
+            # to the function "self.wristmotor.set()" at the end.  Thus, unlike the arm being set in each state, the wrist's VALUE is set in each state, and that value
+            #is used to set the wrist position each time the "else" runs.
 
 
     def teleopExit(self):
@@ -260,17 +464,17 @@ class Myrobot(wpilib.TimedRobot):
     def driveWithJoystick(self, fieldRelative: bool) -> None:
         
 
-        if self.xbox.getRawButton(10):
+        if self.xboxD.getRightStickButton():
             self.halfSpeed = True
-        elif self.xbox.getRawButton(9):
+        elif self.xboxD.getLeftStickButton():
             self.halfSpeed = False
         
         if self.halfSpeed == True:
-            joystick_y = -self.xbox.getLeftY() / 2
+            joystick_y = -self.xboxD.getLeftY() / 2
             joystick_y = applyDeadband(joystick_y, 0.02)
             xSpeed = self.xSpeedLimiter.calculate(joystick_y) * SwerveDrivetrain.getMaxSpeed()
 
-            joystick_x = -self.xbox.getLeftX() / 2
+            joystick_x = -self.xboxD.getLeftX() / 2
             joystick_x = applyDeadband(joystick_x, 0.02)
             ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
         
@@ -278,13 +482,13 @@ class Myrobot(wpilib.TimedRobot):
 
             # Get the x speed. We are inverting this because Xbox controllers return
             # negative values when we push forward.
-            joystick_y = -self.xbox.getLeftY()
+            joystick_y = -self.xboxD.getLeftY()
             joystick_y = applyDeadband(joystick_y, 0.02)
             xSpeed = self.xSpeedLimiter.calculate(joystick_y) * SwerveDrivetrain.getMaxSpeed()
 
             # Get the y speed. We are inverting this because Xbox controllers return
             # negative values when we push to the left.
-            joystick_x = -self.xbox.getLeftX()
+            joystick_x = -self.xboxD.getLeftX()
             joystick_x = applyDeadband(joystick_x, 0.02)
             ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
 
@@ -296,7 +500,7 @@ class Myrobot(wpilib.TimedRobot):
         # mathematics). Xbox controllers return positive values when you pull to
         # the right by default.
         
-        rot = -self.xbox.getRightX()
+        rot = -self.xboxD.getRightX()
         rot = applyDeadband(rot, 0.02)
         rot = self.rotLimiter.calculate(rot) * SwerveDrivetrain.MAX_ANGULAR_SPEED
 
@@ -309,6 +513,28 @@ class Myrobot(wpilib.TimedRobot):
     def counts_to_degrees(self, counts):
         degrees = counts * (360/2048) / self.TURNING_GEAR_RATIO
         return degrees
+    
+    def armCounts_to_degrees(self, counts):
+
+        degrees = (counts * (360/2048)) / self.ARM_GEAR_RATIO
+        return degrees
+
+    
+    def armDegrees_to_counts(self, degrees):
+
+        counts = (degrees * (2048/360)) * self.ARM_GEAR_RATIO
+        return counts
+    
+    def wristCounts_to_degrees(self, counts):
+
+        degrees = (counts * (360/2048)) / self.WRIST_GEAR_RATIO
+        return degrees
+
+    
+    def wristDegrees_to_counts(self, degrees):
+
+        counts = (degrees * (2048/360)) * self.WRIST_GEAR_RATIO
+        return counts
 
 if __name__ == '__main__':
     wpilib.run(Myrobot)

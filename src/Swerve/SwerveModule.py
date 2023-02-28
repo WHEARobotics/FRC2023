@@ -48,6 +48,8 @@ class SwerveModule:                                                             
         self.turningMotor = TalonFX(turningMotorChannel)
         self.absEnc = ctre.sensors.CANCoder(absoluteEncoderChannel)
 
+        #self.absEnc.configMagnetOffset(absEncOffset)#we used cancoder configuration class when we were supposed to just use cancoder class remember that mistake
+
         self.driveMotor.setInverted(False)
         self.turningMotor.setInverted(True)
 
@@ -76,15 +78,15 @@ class SwerveModule:                                                             
                                                                    #... lower value = LET'S CORRECT, BUT WE'LL BE A LITTLE MORE CAUTIOUS)
         self.turningMotor.config_kD(self.kSlotIdx, 0)              #This senses how MUCH the error is off, and helps correct based on how much the error is
 
-        self.absEnc.configMagnetOffset(absEncOffset)#we used cancoder configuration class when we were supposed to just use cancoder class remember that mistake
 
 
         absolutePos = self.absEnc.getAbsolutePosition()
 
-        initPos = self.DegToTurnCount(absolutePos)
+        #initPos = self.DegToTurnCount(absolutePos) #COMMENTED OUT MONDAY AFTERNOON AFTER SETTING INIT TO ZERO
 
-        self.turningMotor.setSelectedSensorPosition(initPos)
-            
+        print(self.turningMotor.setSelectedSensorPosition(0))
+        #print(self.turningMotor.setSelectedSensorPosition(initPos))
+
         self.MODULE_MAX_ANGULAR_VELOCITY = math.pi # 1/2 rotation per second. Note this must == SwerveDriveTrain.MAX_ANGULAR_SPEED
         # Does this constant mean we're using radians?                              #A: 2/3/2023- YES!!  Let's do it!!!
         self.MODULE_MAX_ANGULAR_ACCELERATION = 2 * math.pi
@@ -232,3 +234,7 @@ class SwerveModule:                                                             
             new_angle += 360
 
         return new_angle
+    
+    def resetSteering(self):
+        """Call this when the steering arrow is pointed straight forward, aligned with the others."""
+        self.turningMotor.setSelectedSensorPosition(0.0)
