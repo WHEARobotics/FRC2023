@@ -153,7 +153,15 @@ class Myrobot(wpilib.TimedRobot):
         self.armmotor.setSelectedSensorPosition(self.armDegrees_to_counts(self.ARM_MIN))   
 
         
-
+        # Temporary diagnostic to check on CANCoder communication.
+        print('CANCoder FR')
+        self.swerve.frontRight.steeringDiagnostic()
+        print('CANCoder FL')
+        self.swerve.frontLeft.steeringDiagnostic()
+        print('CANCoder BR')
+        self.swerve.BackRight.steeringDiagnostic()
+        print('CANCoder BL')
+        self.swerve.backLeft.steeringDiagnostic()
 
         """inits below are old vis code"""
 

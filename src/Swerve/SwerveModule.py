@@ -15,6 +15,7 @@ from wpilib.interfaces import MotorController
 from wpilib import PWMSparkMax
 
 import math
+import time # Temporary for diagnostics
 
 class SwerveModule:                                                                 #UPDATE: 2/3/2023
 
@@ -80,7 +81,12 @@ class SwerveModule:                                                             
 
 
 
+<<<<<<< HEAD
         #absolutePos = self.absEnc.getAbsolutePosition()
+=======
+        absolutePos = self.absEnc.getAbsolutePosition()
+        print(absolutePos) # Print the value as a diagnostic.
+>>>>>>> 0107c0b8697a387f833546a3fe7a06449481a52a
 
         #initPos = self.DegToTurnCount(absolutePos) #COMMENTED OUT MONDAY AFTERNOON AFTER SETTING INIT TO ZERO
 
@@ -238,3 +244,17 @@ class SwerveModule:                                                             
     def resetSteering(self):
         """Call this when the steering arrow is pointed straight forward, aligned with the others."""
         self.turningMotor.setSelectedSensorPosition(0.0)
+
+    def steeringDiagnostic(self):
+        """Call this at the end of RobotInit() to check on absolute position calls.
+           The idea is to wait until all the other traffic on the bus has hopefully died down,
+           and then to ask for absolute position several times and see what it returns. 
+           Are all 10 the same?  Are they the same as the absolute position returned during
+           the module's __init__()?
+        """
+        print('steeringDiag')
+        # Get the absolute position 10 times and print it, spaced by 0.1 second.
+        for x in range(10):
+            print(self.absEnc.getAbsolutePosition())
+            time.sleep(0.1) # In general, using time.sleep() is not a good idea in a robot program; doing this for diagnostics only.
+
