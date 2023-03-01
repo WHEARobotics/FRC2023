@@ -21,7 +21,6 @@ class Myrobot(wpilib.TimedRobot):
     kTimeoutMs = 10
 
     kSlotIdx  = 0
-
     WHEELDIAMETER = 4 * 0.0254 #4 inch diameter for the wheel times the conversion to meters
     TRACKWIDTH = 22.25 * 0.0254 #both back and front have the module center to other mod center as 22 and 1/4th
     WHEELBASE = 22.75 * 0.0254 #left side of front mod to back mod #right is 26 7/8
@@ -62,7 +61,7 @@ class Myrobot(wpilib.TimedRobot):
 
         self.WRIST_START = 56  # 56 degrees from the "tucked in position"
 
-        self.WRIST_MAX = 0 # We're calling the "tucked in position" 0 degrees
+        self.WRIST_MAX = 30 # We're calling the "tucked in position" 0 degrees
 
         self.WRIST_MIN = -115 # Degrees, wrist dropped in collecting position at the ground level.
 
@@ -76,7 +75,7 @@ class Myrobot(wpilib.TimedRobot):
         self.armmotor = ctre.TalonFX(2)
         self.armmotor2 = ctre.TalonFX(3)
 
-        # self.claw = ctre.TalonSRX(12)
+        self.claw = ctre.TalonSRX(12)
 
         
         self.wristmotor.setInverted(False)
@@ -382,8 +381,10 @@ class Myrobot(wpilib.TimedRobot):
 
 
         #rTrigger = self.xbox.getRightTriggerAxis()
-        #AButton = self.xbox.getAButton()
-        #BButton = self.xbox.getBButton()
+        AButton = self.xboxO.getAButton()
+        BButton = self.xboxO.getBButton()
+        XButton = self.xboxO.getXButton()
+        YButton = self.xboxO.getYButton()
         lBumper = self.xboxO.getLeftBumper()
         rBumper = self.xboxO.getRightBumper()
         lTrigger = self.xboxO.getLeftTriggerAxis()
@@ -391,6 +392,8 @@ class Myrobot(wpilib.TimedRobot):
         lStickButton = self.xboxO.getLeftStickButton()
         rStickButton = self.xboxO.getRightStickButton()
         back = self.xboxO.getBackButton()
+
+
 
 
         if lBumper: #mid cube
@@ -407,9 +410,18 @@ class Myrobot(wpilib.TimedRobot):
             self.state = 6
         elif rStickButton: # wrist down
             self.state = 7
-            
+        # elif AButton:
+        #     self.state = 8
+        # elif BButton: 
+        #     self.state = 9    
+        # elif XButton:  
+        #     self.state = 10   
+        # elif YButton:
+        #     self.state = 11
+                
 
         # these are the actions dealing with the states
+        
         if self.state == 0:
             self.armmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
             self.wristmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
@@ -443,7 +455,31 @@ class Myrobot(wpilib.TimedRobot):
             #each time the code moves through the "else" states, it moves the arm to the desired position within that state, then passes the value of the wrist's desired position 
             # to the function "self.wristmotor.set()" at the end.  Thus, unlike the arm being set in each state, the wrist's VALUE is set in each state, and that value
             #is used to set the wrist position each time the "else" runs.
+            
+            # if AButton and BButton:
+            #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+            # elif XButton and YButton:
+            #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+            # elif AButton and YButton:
+            #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+            # elif XButton and BButton:
+            #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+            # elif AButton and XButton:
+            #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+            
 
+            if AButton: #cube INTAKE
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.25)
+            elif BButton: #cube OUTTAKE
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.5) 
+            elif XButton: #cone INTAKE
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.25) 
+            elif YButton: #cone OUTAKE
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, -1.0) 
+            else:
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0) 
+
+            
 
     def teleopExit(self):
 

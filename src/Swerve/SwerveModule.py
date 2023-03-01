@@ -80,7 +80,7 @@ class SwerveModule:                                                             
 
 
 
-        absolutePos = self.absEnc.getAbsolutePosition()
+        #absolutePos = self.absEnc.getAbsolutePosition()
 
         #initPos = self.DegToTurnCount(absolutePos) #COMMENTED OUT MONDAY AFTERNOON AFTER SETTING INIT TO ZERO
 
