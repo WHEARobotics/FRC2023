@@ -58,6 +58,7 @@ class SwerveModule:                                                             
         self.driveMotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
         self.turningMotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
 
+
         #self.targetPos = 0                       #target pos is used in teleop periodic, we would set it to the joystick rotation, and set the motor pos to the target pos
 
         #We'll need to set these up for the drive motor
@@ -135,8 +136,10 @@ class SwerveModule:                                                             
     def getState(self) -> SwerveModuleState:
         return SwerveModuleState(self.driveVelocitytToMPS(self.driveMotor.getSelectedSensorVelocity()), Rotation2d.fromDegrees(self.TurnCountToDeg(self.turningMotor.getSelectedSensorPosition())))           # Rod: needs a rate in meters/sec and turning angle in radians.
 
+    
     def getPosition(self) -> SwerveModulePosition:
-        return SwerveModulePosition(self.driveMotor.getSelectedSensorPosition(), Rotation2d.fromDegrees(self.TurnCountToDeg(self.turningMotor.getSelectedSensorPosition())))           # Rod: needs the distance the wheel has driven (meters), and the turning angle in radians
+        drivePos = self.driveCountToMeters(self.driveMotor.getSelectedSensorPosition())
+        return SwerveModulePosition(drivePos, Rotation2d.fromDegrees(self.TurnCountToDeg(self.turningMotor.getSelectedSensorPosition())))           # Rod: needs the distance the wheel has driven (meters), and the turning angle in radians
 
     def setDesiredState(self, desiredState: SwerveModuleState, open_loop: bool) -> None:
         '''This method is does all the work.  Pass it a desired SwerveModuleState (that is, wheel rim velocity and
