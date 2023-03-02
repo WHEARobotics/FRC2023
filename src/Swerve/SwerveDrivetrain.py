@@ -23,7 +23,7 @@ class SwerveDrivetrain:
     MAX_ANGULAR_SPEED = math.pi # 1/2 rotation per second
 
     ABSOLUTEPOS_3 = 32.959   # Back Right
-    ABSOLUTEPOS_4 = -278.788 #106.424  # Front Right
+    ABSOLUTEPOS_4 = -249.433 #-278.788 #106.424  # Front Right
     ABSOLUTEPOS_2 = 206.455  # Back Left
     ABSOLUTEPOS_1 = 296.543  # Front Left
     
@@ -49,10 +49,15 @@ class SwerveDrivetrain:
         self.backLeftLocation = Translation2d(-half_wheel_base, half_track_width)
         self.backRightLocation = Translation2d(-half_wheel_base, -half_track_width)
 
-        self.frontRight = SwerveModule(1, 10, 4, self.ABSOLUTEPOS_4)  #OG offset was 106.424       
-        self.frontLeft = SwerveModule(5, 4, 1, self.ABSOLUTEPOS_1)  #OG offset was 296.543
-        self.backRight = SwerveModule(8, 9, 3, self.ABSOLUTEPOS_3)
+        print("BL")
         self.backLeft = SwerveModule(6, 7, 2, self.ABSOLUTEPOS_2)
+        print("FR")
+        self.frontRight = SwerveModule(1, 10, 4, self.ABSOLUTEPOS_4)  #OG offset was 106.424  
+        print("FL")     
+        self.frontLeft = SwerveModule(5, 4, 1, self.ABSOLUTEPOS_1)  #OG offset was 296.543
+        print("BR")
+        self.backRight = SwerveModule(8, 9, 3, self.ABSOLUTEPOS_3)
+        
         self.swerve_modules = [ self.frontLeft, self.frontRight, self.backLeft, self.backRight ]
 
 

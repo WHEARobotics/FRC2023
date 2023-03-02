@@ -27,13 +27,14 @@ class SwerveModule:                                                             
     DRIVE_GEAR_RATIO = 6.75
     #WHEELCIRCUMFERENCE = WHEELDIAMETER * pi
 
-
+     #COMMENTED OUT TUES MORNING
+    '''
     #encoder motor values for the absolute position CANCoders in degrees
     ABSOLUTEPOS_3: 32.959   # Back Right
     ABSOLUTEPOS_4: 106.424  # Front Right
     ABSOLUTEPOS_2: 206.455  # Back Left
     ABSOLUTEPOS_1: 296.543  # Front Left
-
+    '''
     #turn angle invert: yes
     #drive invert: no
 
@@ -51,7 +52,7 @@ class SwerveModule:                                                             
 
         #self.absEnc.configMagnetOffset(absEncOffset)#we used cancoder configuration class when we were supposed to just use cancoder class remember that mistake
 
-        self.driveMotor.setInverted(False)
+        self.driveMotor.setInverted(False) #set inverted to true
         self.turningMotor.setInverted(True)
 
         self.driveMotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
@@ -84,10 +85,16 @@ class SwerveModule:                                                             
         absolutePos = self.absEnc.getAbsolutePosition()
         print(absolutePos) # Print the value as a diagnostic.
 
-        #initPos = self.DegToTurnCount(absolutePos) #COMMENTED OUT MONDAY AFTERNOON AFTER SETTING INIT TO ZERO
+        initPos = self.DegToTurnCount(absolutePos) #COMMENTED OUT MONDAY AFTERNOON AFTER SETTING INIT TO ZERO  '''SWAP BACK TUES AM'''
+        print(initPos)
+        print(self.turningMotor.setSelectedSensorPosition(0))                                                  #'''SWAP BACK TUES AM'''
+        #print(self.turningMotor.setSelectedSensorPosition(initPos))   
+        
+        tempPos = self.turningMotor.getSelectedSensorPosition()                                          #SWAP BACK TUES AM'''
+        print(tempPos)
 
-        print(self.turningMotor.setSelectedSensorPosition(0))
-        #print(self.turningMotor.setSelectedSensorPosition(initPos))
+        print(self.TurnCountToDeg(tempPos))
+
 
         self.MODULE_MAX_ANGULAR_VELOCITY = math.pi # 1/2 rotation per second. Note this must == SwerveDriveTrain.MAX_ANGULAR_SPEED
         # Does this constant mean we're using radians?                              #A: 2/3/2023- YES!!  Let's do it!!!
@@ -153,6 +160,7 @@ class SwerveModule:                                                             
         self.driveMotor.set(ControlMode.Current, driveOutput + driveFeedForward) # Rod: Replace with setting ctre.TalonFXControlMode.Velocity and the target velocity for the internal PID.
         self.turningMotor.set(ControlMode.Current, turnOutput + turnFeedForward) # Rod: 
         """
+
         present_degrees = self.TurnCountToDeg(self.turningMotor.getSelectedSensorPosition()) #Soren here, I think instead of tuning motor selected sensor, we might have to use absolute encoder
         present_rotation = Rotation2d.fromDegrees(present_degrees)
         state = self.optimize(desiredState, present_rotation)

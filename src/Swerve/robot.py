@@ -71,30 +71,30 @@ class Myrobot(wpilib.TimedRobot):
 
         self.state = 0 #initializing the state for the arm
 
-        self.wristmotor = ctre.TalonFX(11)
-        self.armmotor = ctre.TalonFX(2)
-        self.armmotor2 = ctre.TalonFX(3)
+        #self.wristmotor = ctre.TalonFX(11)
+        #self.armmotor = ctre.TalonFX(2)
+        #self.armmotor2 = ctre.TalonFX(3)
 
         self.claw = ctre.TalonSRX(12)
 
         
-        self.wristmotor.setInverted(False)
+        #self.wristmotor.setInverted(False)
 
     
-        self.wristmotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
-
+        #self.wristmotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
+        '''
         self.armmotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
         self.armmotor2.setNeutralMode(ctre._ctre.NeutralMode.Brake)
 
         #this makes the armmotor2 follow the other one but the oppose master makes it go the opposite direction from the motor it follows
         self.armmotor2.follow(self.armmotor)
         self.armmotor2.setInverted(ctre._ctre.InvertType.OpposeMaster)
-
+        '''
         #these are all the positions that will be used for the arm
-
+        '''
         self.groundLevel = self.armDegrees_to_counts(-63) 
 
-        #self.feederStation = self.armDegrees_to_counts(17) 
+        self.feederStation = self.armDegrees_to_counts(17) 
 
         self.midCube = self.armDegrees_to_counts(7) 
 
@@ -151,7 +151,7 @@ class Myrobot(wpilib.TimedRobot):
 
         #we need to have the arm on the lowest position when turned on
         self.armmotor.setSelectedSensorPosition(self.armDegrees_to_counts(self.ARM_MIN))   
-
+        '''
         
         # Temporary diagnostic to check on CANCoder communication.
         print('CANCoder FR')
@@ -159,7 +159,7 @@ class Myrobot(wpilib.TimedRobot):
         print('CANCoder FL')
         self.swerve.frontLeft.steeringDiagnostic()
         print('CANCoder BR')
-        self.swerve.BackRight.steeringDiagnostic()
+        self.swerve.backRight.steeringDiagnostic()
         print('CANCoder BL')
         self.swerve.backLeft.steeringDiagnostic()
 
@@ -195,8 +195,8 @@ class Myrobot(wpilib.TimedRobot):
         modBRCAN = self.swerve.backRight.absEnc.getAbsolutePosition()
         modBLCAN = self.swerve.backLeft.absEnc.getAbsolutePosition()
 
-        wristPos = self.wristmotor.getSelectedSensorPosition()
-        Wrist_Angle_Deg = self.wristCounts_to_degrees(wristPos)
+        #wristPos = self.wristmotor.getSelectedSensorPosition()
+        #Wrist_Angle_Deg = self.wristCounts_to_degrees(wristPos)
 
         wpilib.SmartDashboard.putString('DB/String 0',"FR: {:4.1f}  {:4.1f}".format(moduleFRState.angle.degrees() % 360, modFRCAN % 360))
         wpilib.SmartDashboard.putString('DB/String 1',"FL: {:4.1f}  {:4.1f}".format(moduleFLState.angle.degrees() % 360, modFLCAN % 360))
@@ -209,7 +209,7 @@ class Myrobot(wpilib.TimedRobot):
         wpilib.SmartDashboard.putString('DB/String 8',"BL: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[2].angle.degrees() % 360, moduleBLState.speed))
 
         # wpilib.SmartDashboard.putString('DB/String 9',"robot angle: {:4.2f}".format(self.swerve.get_heading().degrees() % 360))
-        wpilib.SmartDashboard.putString('DB/String 9',"Wrist_Pos_Deg: {:4.2f}".format(Wrist_Angle_Deg))
+        #wpilib.SmartDashboard.putString('DB/String 9',"Wrist_Pos_Deg: {:4.2f}".format(Wrist_Angle_Deg))
 
 
 
@@ -322,8 +322,8 @@ class Myrobot(wpilib.TimedRobot):
 
         # These three need to be removed for competition
         self.swerve.gyro.reset()
-        self.armmotor.setSelectedSensorPosition(self.armDegrees_to_counts(self.ARM_MIN))
-        self.wristmotor.setSelectedSensorPosition(self.wristDegrees_to_counts(self.WRIST_START)) #CHANGED MONDAY NIGHT- this was set at wrist inner, but we need it to initialize at wrist resting position (56deg) 
+        #self.armmotor.setSelectedSensorPosition(self.armDegrees_to_counts(self.ARM_MIN))
+        #self.wristmotor.setSelectedSensorPosition(self.wristDegrees_to_counts(self.WRIST_START)) #CHANGED MONDAY NIGHT- this was set at wrist inner, but we need it to initialize at wrist resting position (56deg) 
 
         self.state = 0
 
@@ -369,13 +369,13 @@ class Myrobot(wpilib.TimedRobot):
 
         """everything below is teleop periodic taken from Wiggleton robot.py"""
 
-        motorPos = self.armmotor.getSelectedSensorPosition()
+        #motorPos = self.armmotor.getSelectedSensorPosition()
 
-        wristPos = self.wristmotor.getSelectedSensorPosition()
+        #wristPos = self.wristmotor.getSelectedSensorPosition()
 
-        Arm_Angle_Deg = self.armCounts_to_degrees(motorPos)
+        #Arm_Angle_Deg = self.armCounts_to_degrees(motorPos)
 
-        Wrist_Angle_Deg = self.wristCounts_to_degrees(wristPos)
+        #Wrist_Angle_Deg = self.wristCounts_to_degrees(wristPos)
 
         
 
@@ -429,10 +429,10 @@ class Myrobot(wpilib.TimedRobot):
                 
 
         # these are the actions dealing with the states
-        
+        '''
         if self.state == 0:
             self.armmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
-            self.wristmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+            #self.wristmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
         else:
             if self.state == 1:
                 self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.midCube) #sets the arm motor to desired height
@@ -459,7 +459,7 @@ class Myrobot(wpilib.TimedRobot):
                 self.state = 0
 
             Wrist_Convertion = self.wristDesiredPos -(63 + Arm_Angle_Deg) #takes the desired position (in or out) and compensates for the angle ofthe arm
-            self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristDegrees_to_counts(Wrist_Convertion))
+            #self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristDegrees_to_counts(Wrist_Convertion))
             #each time the code moves through the "else" states, it moves the arm to the desired position within that state, then passes the value of the wrist's desired position 
             # to the function "self.wristmotor.set()" at the end.  Thus, unlike the arm being set in each state, the wrist's VALUE is set in each state, and that value
             #is used to set the wrist position each time the "else" runs.
@@ -486,7 +486,7 @@ class Myrobot(wpilib.TimedRobot):
                 self.claw.set(ctre._ctre.ControlMode.PercentOutput, -1.0) 
             else:
                 self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0) 
-
+        '''
             
 
     def teleopExit(self):
@@ -557,7 +557,7 @@ class Myrobot(wpilib.TimedRobot):
     def counts_to_degrees(self, counts):
         degrees = counts * (360/2048) / self.TURNING_GEAR_RATIO
         return degrees
-    
+    '''
     def armCounts_to_degrees(self, counts):
 
         degrees = (counts * (360/2048)) / self.ARM_GEAR_RATIO
@@ -579,6 +579,6 @@ class Myrobot(wpilib.TimedRobot):
 
         counts = (degrees * (2048/360)) * self.WRIST_GEAR_RATIO
         return counts
-
+    '''
 if __name__ == '__main__':
     wpilib.run(Myrobot)
