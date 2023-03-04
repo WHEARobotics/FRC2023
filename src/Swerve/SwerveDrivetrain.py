@@ -49,13 +49,13 @@ class SwerveDrivetrain:
         self.backLeftLocation = Translation2d(-half_wheel_base, half_track_width)
         self.backRightLocation = Translation2d(-half_wheel_base, -half_track_width)
 
-        print("BL")
+
         self.backLeft = SwerveModule(6, 7, 2, self.ABSOLUTEPOS_2)
-        print("FR")
+    
         self.frontRight = SwerveModule(1, 10, 4, self.ABSOLUTEPOS_4)  #OG offset was 106.424  
-        print("FL")     
+    
         self.frontLeft = SwerveModule(5, 4, 1, self.ABSOLUTEPOS_1)  #OG offset was 296.543
-        print("BR")
+ 
         self.backRight = SwerveModule(8, 9, 3, self.ABSOLUTEPOS_3)
         
         self.swerve_modules = [ self.frontLeft, self.frontRight, self.backLeft, self.backRight ]

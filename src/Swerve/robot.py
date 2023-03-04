@@ -24,7 +24,7 @@ class Myrobot(wpilib.TimedRobot):
     WHEELDIAMETER = 4 * 0.0254 #4 inch diameter for the wheel times the conversion to meters
     TRACKWIDTH = 22.25 * 0.0254 #both back and front have the module center to other mod center as 22 and 1/4th
     WHEELBASE = 22.75 * 0.0254 #left side of front mod to back mod #right is 26 7/8
-    TURNING_GEAR_RATIO = 150.0/7.0 # Docs call it a 150/7:1
+    TURNING_GEAR_RATIO = 150.0 / 7.0 # Docs call it a 150/7:1
     DRIVE_GEAR_RATIO = 6.75
     #WHEELCIRCUMFERENCE = WHEELDIAMETER * pi
 
@@ -39,6 +39,8 @@ class Myrobot(wpilib.TimedRobot):
 
         self.swerve = SwerveDrivetrain()
 
+        #changes the limit of rate of change in the input value. the smaller the number the longer it takes to reach the destination if slew rate = 1 and input = 1 it would take 1 secnd to accelerate to full speed
+        #if input = 0.5 it would take 0.5 seconds to accelerate to desired speed.
         self.xSpeedLimiter = SlewRateLimiter(3)
         self.ySpeedLimiter = SlewRateLimiter(3)
         self.rotLimiter = SlewRateLimiter(3)
@@ -71,27 +73,29 @@ class Myrobot(wpilib.TimedRobot):
 
         self.state = 0 #initializing the state for the arm
 
-        #self.wristmotor = ctre.TalonFX(11)
-        #self.armmotor = ctre.TalonFX(2)
-        #self.armmotor2 = ctre.TalonFX(3)
+        self.wristmotor = ctre.TalonFX(11)
+        self.armmotor = ctre.TalonFX(2)
+        self.armmotor2 = ctre.TalonFX(3)
 
         self.claw = ctre.TalonSRX(12)
 
         
-        #self.wristmotor.setInverted(False)
+        self.wristmotor.setInverted(False)
 
     
-        #self.wristmotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
-        '''
+        self.wristmotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
+        
         self.armmotor.setNeutralMode(ctre._ctre.NeutralMode.Brake)
         self.armmotor2.setNeutralMode(ctre._ctre.NeutralMode.Brake)
+
+        wpilib.CameraServer.launch()
 
         #this makes the armmotor2 follow the other one but the oppose master makes it go the opposite direction from the motor it follows
         self.armmotor2.follow(self.armmotor)
         self.armmotor2.setInverted(ctre._ctre.InvertType.OpposeMaster)
-        '''
+        
         #these are all the positions that will be used for the arm
-        '''
+        
         self.groundLevel = self.armDegrees_to_counts(-63) 
 
         self.feederStation = self.armDegrees_to_counts(17) 
@@ -151,17 +155,19 @@ class Myrobot(wpilib.TimedRobot):
 
         #we need to have the arm on the lowest position when turned on
         self.armmotor.setSelectedSensorPosition(self.armDegrees_to_counts(self.ARM_MIN))   
-        '''
+        self.swerve.gyro.reset()
+        self.wristmotor.setSelectedSensorPosition(self.wristDegrees_to_counts(self.WRIST_START)) #CHANGED MONDAY NIGHT- this was set at wrist inner, but we need it to initialize at wrist resting position (56deg) 
+        
         
         # Temporary diagnostic to check on CANCoder communication.
-        print('CANCoder FR')
-        self.swerve.frontRight.steeringDiagnostic()
-        print('CANCoder FL')
-        self.swerve.frontLeft.steeringDiagnostic()
-        print('CANCoder BR')
-        self.swerve.backRight.steeringDiagnostic()
-        print('CANCoder BL')
-        self.swerve.backLeft.steeringDiagnostic()
+        # print('CANCoder FR')
+        # self.swerve.frontRight.steeringDiagnostic()
+        # print('CANCoder FL')
+        # self.swerve.frontLeft.steeringDiagnostic()
+        # print('CANCoder BR')
+        # self.swerve.backRight.steeringDiagnostic()
+        # print('CANCoder BL')
+        # self.swerve.backLeft.steeringDiagnostic()
 
         """inits below are old vis code"""
 
@@ -203,13 +209,13 @@ class Myrobot(wpilib.TimedRobot):
         wpilib.SmartDashboard.putString('DB/String 2',"BR: {:4.1f}  {:4.1f}".format(moduleBRState.angle.degrees() % 360, modBRCAN % 360))
         wpilib.SmartDashboard.putString('DB/String 3',"BL: {:4.1f}  {:4.1f}".format(moduleBLState.angle.degrees() % 360, modBLCAN % 360))
 
-        wpilib.SmartDashboard.putString('DB/String 5',"FR: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[1].angle.degrees() % 360, moduleFRState.speed))
-        wpilib.SmartDashboard.putString('DB/String 6',"FL: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[0].angle.degrees() % 360, moduleFLState.speed))
-        wpilib.SmartDashboard.putString('DB/String 7',"BR: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[3].angle.degrees() % 360, moduleBRState.speed))
-        wpilib.SmartDashboard.putString('DB/String 8',"BL: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[2].angle.degrees() % 360, moduleBLState.speed))
+        #wpilib.SmartDashboard.putString('DB/String 5',"FR: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[1].angle.degrees() % 360, moduleFRState.speed))
+        #wpilib.SmartDashboard.putString('DB/String 6',"FL: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[0].angle.degrees() % 360, moduleFLState.speed))
+        #wpilib.SmartDashboard.putString('DB/String 7',"BR: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[3].angle.degrees() % 360, moduleBRState.speed))
+        #wpilib.SmartDashboard.putString('DB/String 8',"BL: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[2].angle.degrees() % 360, moduleBLState.speed))
 
         # wpilib.SmartDashboard.putString('DB/String 9',"robot angle: {:4.2f}".format(self.swerve.get_heading().degrees() % 360))
-        #wpilib.SmartDashboard.putString('DB/String 9',"Wrist_Pos_Deg: {:4.2f}".format(Wrist_Angle_Deg))
+        # wpilib.SmartDashboard.putString('DB/String 9',"Wrist_Pos_Deg: {:4.2f}".format(Wrist_Angle_Deg))
 
 
 
@@ -240,62 +246,80 @@ class Myrobot(wpilib.TimedRobot):
         
         self.autoState = 0
 
+        self.swerve.gyro.reset()
+
 
     def autonomousPeriodic(self):
+    
         
-        fieldRelative = False
+        fieldRelative = True
 
-        #if wpilib.SmartDashboard.give me the DB button
-        if self.autoState == 0:
-            xSpeed = 1
-            ySpeed = 0
+
+
+        # if wpilib.SmartDashboard.give me the DB button
+        # if self.autoState == 0:
+        #     xSpeed = 0
+        #     ySpeed = 0
+        #     rot = 0
+        #     if self.wiggletimer.advanceIfElapsed(3):
+        #         self.autoState = 1
+        if  self.autoState == 0:
+            xSpeed = 0.5
+            ySpeed = 0 
             rot = 0
-            self.wiggletimer.advanceIfElapsed(3)
-            self.autoState = 1
+            if self.wiggleTimer.advanceIfElapsed(7.5):
+                self.autoState = 1
         elif self.autoState == 1:
-            xSpeed = 1
-            ySpeed = 0
-            rot = 0
-            self.wiggleTimer.advanceIfElapsed(3)
-            self .autoState = 2
-        elif self. autoState == 2:
-            xSpeed = 1
-            ySpeed = 0
-            rot = 0
-            self.wiggleTimer.advanceIfElapsed(3)
-            self .autoState = 3
-        elif self.autoState == 3:
-            xSpeed = 1
-            ySpeed = 0
-            rot = 0
-            self.wiggleTimer.advanceIfElapsed(3)
-            self.autoState = 4
-        elif self. autoState == 4:
-            xSpeed = 1
-            ySpeed = 0
-            rot = 0
-            self.wiggleTimer.advanceIfElapsed(3)
-            self .autoState = 5
-        elif self. autoState == 5:
-            xSpeed = 1
-            ySpeed = 0
-            rot = 0
-            self.wiggleTimer.advanceIfElapsed(3)
-            self .autoState = 6
-        elif self. autoState == 6:
-            xSpeed = 1
-            ySpeed = 0
-            rot = 0
-            self.wiggleTimer.advanceIfElapsed(3)
-            self .autoState = 7
-        elif self.autoState == 7:
             xSpeed = 0
-            ySpeed = 0
+            ySpeed = 0 
             rot = 0
+            self.wiggleTimer.advanceIfElapsed(3)
+   
 
         self.swerve.drive(xSpeed, ySpeed, rot, fieldRelative)
 
-        pass
+        # if self.autoState == 1:
+        #     self.drivemotor.set(ctre._ctre.ControlMode.PercentOutput, 0.5)
+        #     self.autostate = 2
+        
+
+        #     self .autoState = 2
+        # elif self. autoState == 2:
+        #     xSpeed = 1
+        #     ySpeed = 0
+        #     rot = 0
+        #     self.wiggleTimer.advanceIfElapsed(3)
+        #     self .autoState = 3
+        # elif self.autoState == 3:
+        #     xSpeed = 1
+        #     ySpeed = 0
+        #     rot = 0
+        #     self.wiggleTimer.advanceIfElapsed(3)
+        #     self.autoState = 4
+        # elif self. autoState == 4:
+        #     xSpeed = 1
+        #     ySpeed = 0
+        #     rot = 0
+        #     self.wiggleTimer.advanceIfElapsed(3)
+        #     self .autoState = 5
+        # elif self. autoState == 5:
+        #     xSpeed = 1
+        #     ySpeed = 0
+        #     rot = 0
+        #     self.wiggleTimer.advanceIfElapsed(3)
+        #     self .autoState = 6
+        # elif self. autoState == 6:
+        #     xSpeed = 1
+        #     ySpeed = 0
+        #     rot = 0
+        #     self.wiggleTimer.advanceIfElapsed(3)
+        #     self .autoState = 7
+        # elif self.autoState == 7:
+        #     xSpeed = 0
+        #     ySpeed = 0
+        #     rot = 0
+
+    
 
 
     def autonomousExit(self):
@@ -321,15 +345,12 @@ class Myrobot(wpilib.TimedRobot):
 
 
         # These three need to be removed for competition
-        self.swerve.gyro.reset()
-        #self.armmotor.setSelectedSensorPosition(self.armDegrees_to_counts(self.ARM_MIN))
-        #self.wristmotor.setSelectedSensorPosition(self.wristDegrees_to_counts(self.WRIST_START)) #CHANGED MONDAY NIGHT- this was set at wrist inner, but we need it to initialize at wrist resting position (56deg) 
 
         self.state = 0
 
         # For teleop testing purposes, align the wheels before enabling.
         # For the match, move the following statement to automomousInit().
-        self.swerve.resetSteering()
+        # self.swerve.resetSteering()
         
 
     def teleopPeriodic(self):
@@ -363,28 +384,28 @@ class Myrobot(wpilib.TimedRobot):
         wpilib.SmartDashboard.putString('DB/String 7',"BR: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[3].angle.degrees() % 360, moduleBRState.speed))
         wpilib.SmartDashboard.putString('DB/String 8',"BL: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[2].angle.degrees() % 360, moduleBLState.speed))
 
-        wpilib.SmartDashboard.putString('DB/String 9',"robot angle: {:4.2f}".format(self.swerve.get_heading().degrees() % 360))
+        #wpilib.SmartDashboard.putString('DB/String 9',"robot angle: {:4.2f}".format(self.swerve.get_heading().degrees() % 360))
         # wpilib.SmartDashboard.putString('DB/String 4',"Mod4TurnEnc: {:4.2f}".format(self.mod4turnEnc % 360))
 
 
         """everything below is teleop periodic taken from Wiggleton robot.py"""
 
-        #motorPos = self.armmotor.getSelectedSensorPosition()
+        motorPos = self.armmotor.getSelectedSensorPosition()
 
-        #wristPos = self.wristmotor.getSelectedSensorPosition()
+        wristPos = self.wristmotor.getSelectedSensorPosition()
 
-        #Arm_Angle_Deg = self.armCounts_to_degrees(motorPos)
+        Arm_Angle_Deg = self.armCounts_to_degrees(motorPos)
 
-        #Wrist_Angle_Deg = self.wristCounts_to_degrees(wristPos)
-
-        
-
-
+        Wrist_Angle_Deg = self.wristCounts_to_degrees(wristPos)
 
         
-        #wpilib.SmartDashboard.putString('DB/String 4',"Pos_Degrees: {:4.2f}".format(Arm_Angle_Deg))
+
+
+
+        
+        wpilib.SmartDashboard.putString('DB/String 4',"Arm_Pos_Degrees: {:4.2f}".format(Arm_Angle_Deg))
         #wpilib.SmartDashboard.putString('DB/String 4',"Time: {:3.2f}".format(self.wiggleTimer.get()))
-        #wpilib.SmartDashboard.putString('DB/String 9',"Wrist_Pos_Deg: {:4.2f}".format(Wrist_Angle_Deg))
+        wpilib.SmartDashboard.putString('DB/String 9',"Wrist_Pos_Deg: {:4.2f}".format(Wrist_Angle_Deg))
        
 
 
@@ -418,21 +439,13 @@ class Myrobot(wpilib.TimedRobot):
             self.state = 6
         elif rStickButton: # wrist down
             self.state = 7
-        # elif AButton:
-        #     self.state = 8
-        # elif BButton: 
-        #     self.state = 9    
-        # elif XButton:  
-        #     self.state = 10   
-        # elif YButton:
-        #     self.state = 11
                 
 
         # these are the actions dealing with the states
-        '''
+        
         if self.state == 0:
             self.armmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
-            #self.wristmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+            self.wristmotor.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
         else:
             if self.state == 1:
                 self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.midCube) #sets the arm motor to desired height
@@ -450,16 +463,16 @@ class Myrobot(wpilib.TimedRobot):
                 self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.groundLevel)
                 self.wristDesiredPos = self.WRIST_MAX
             elif self.state == 6:
-                #self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristInnerPos) 
+                self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristInnerPos) 
                 self.wristDesiredPos = self.WRIST_MAX
             elif self.state == 7:
-                #self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristGroudLevel)
+                self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristGroudLevel)
                 self.wristDesiredPos = self.WRIST_MIN
             else:
                 self.state = 0
 
             Wrist_Convertion = self.wristDesiredPos -(63 + Arm_Angle_Deg) #takes the desired position (in or out) and compensates for the angle ofthe arm
-            #self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristDegrees_to_counts(Wrist_Convertion))
+            self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristDegrees_to_counts(Wrist_Convertion))
             #each time the code moves through the "else" states, it moves the arm to the desired position within that state, then passes the value of the wrist's desired position 
             # to the function "self.wristmotor.set()" at the end.  Thus, unlike the arm being set in each state, the wrist's VALUE is set in each state, and that value
             #is used to set the wrist position each time the "else" runs.
@@ -477,16 +490,16 @@ class Myrobot(wpilib.TimedRobot):
             
 
             if AButton: #cube INTAKE
-                self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.25)
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.5)
             elif BButton: #cube OUTTAKE
                 self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.5) 
             elif XButton: #cone INTAKE
-                self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.25) 
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, 1) 
             elif YButton: #cone OUTAKE
                 self.claw.set(ctre._ctre.ControlMode.PercentOutput, -1.0) 
             else:
                 self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0) 
-        '''
+        
             
 
     def teleopExit(self):
@@ -514,11 +527,11 @@ class Myrobot(wpilib.TimedRobot):
             self.halfSpeed = False
         
         if self.halfSpeed == True:
-            joystick_y = -self.xboxD.getLeftY() / 2
+            joystick_y = -self.xboxD.getLeftY() / 4
             joystick_y = applyDeadband(joystick_y, 0.02)
             xSpeed = self.xSpeedLimiter.calculate(joystick_y) * SwerveDrivetrain.getMaxSpeed()
 
-            joystick_x = -self.xboxD.getLeftX() / 2
+            joystick_x = -self.xboxD.getLeftX() / 4
             joystick_x = applyDeadband(joystick_x, 0.02)
             ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
         
@@ -526,13 +539,13 @@ class Myrobot(wpilib.TimedRobot):
 
             # Get the x speed. We are inverting this because Xbox controllers return
             # negative values when we push forward.
-            joystick_y = -self.xboxD.getLeftY()
+            joystick_y = -self.xboxD.getLeftY() / 2
             joystick_y = applyDeadband(joystick_y, 0.02)
             xSpeed = self.xSpeedLimiter.calculate(joystick_y) * SwerveDrivetrain.getMaxSpeed()
 
             # Get the y speed. We are inverting this because Xbox controllers return
             # negative values when we push to the left.
-            joystick_x = -self.xboxD.getLeftX()
+            joystick_x = -self.xboxD.getLeftX() / 2
             joystick_x = applyDeadband(joystick_x, 0.02)
             ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
 
@@ -557,7 +570,7 @@ class Myrobot(wpilib.TimedRobot):
     def counts_to_degrees(self, counts):
         degrees = counts * (360/2048) / self.TURNING_GEAR_RATIO
         return degrees
-    '''
+    
     def armCounts_to_degrees(self, counts):
 
         degrees = (counts * (360/2048)) / self.ARM_GEAR_RATIO
@@ -579,6 +592,6 @@ class Myrobot(wpilib.TimedRobot):
 
         counts = (degrees * (2048/360)) * self.WRIST_GEAR_RATIO
         return counts
-    '''
+    
 if __name__ == '__main__':
     wpilib.run(Myrobot)

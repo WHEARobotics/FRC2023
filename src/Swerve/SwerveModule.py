@@ -86,9 +86,9 @@ class SwerveModule:                                                             
         absolutePos = self.absEnc.getAbsolutePosition()
         print(absolutePos) # Print the value as a diagnostic.
 
-        initPos = self.DegToTurnCount(absolutePos) #COMMENTED OUT MONDAY AFTERNOON AFTER SETTING INIT TO ZERO  '''SWAP BACK TUES AM'''
-        print(initPos)
-        print(self.turningMotor.setSelectedSensorPosition(0))                                                  #'''SWAP BACK TUES AM'''
+        # initPos = self.DegToTurnCount(absolutePos) #COMMENTED OUT MONDAY AFTERNOON AFTER SETTING INIT TO ZERO  '''SWAP BACK TUES AM'''
+        # print(initPos)
+        self.turningMotor.setSelectedSensorPosition(0)                                                  #'''SWAP BACK TUES AM'''
         #print(self.turningMotor.setSelectedSensorPosition(initPos))   
         
         tempPos = self.turningMotor.getSelectedSensorPosition()                                          #SWAP BACK TUES AM'''
@@ -139,7 +139,9 @@ class SwerveModule:                                                             
     
     def getPosition(self) -> SwerveModulePosition:
         drivePos = self.driveCountToMeters(self.driveMotor.getSelectedSensorPosition())
+        wpilib.SmartDashboard.putString('DB/String 4',"Pos_Degrees: {:4.2f}".format(drivePos))
         return SwerveModulePosition(drivePos, Rotation2d.fromDegrees(self.TurnCountToDeg(self.turningMotor.getSelectedSensorPosition())))           # Rod: needs the distance the wheel has driven (meters), and the turning angle in radians
+
 
     def setDesiredState(self, desiredState: SwerveModuleState, open_loop: bool) -> None:
         '''This method is does all the work.  Pass it a desired SwerveModuleState (that is, wheel rim velocity and
@@ -252,16 +254,16 @@ class SwerveModule:                                                             
         """Call this when the steering arrow is pointed straight forward, aligned with the others."""
         self.turningMotor.setSelectedSensorPosition(0.0)
 
-    def steeringDiagnostic(self):
+    # def steeringDiagnostic(self):
         """Call this at the end of RobotInit() to check on absolute position calls.
            The idea is to wait until all the other traffic on the bus has hopefully died down,
            and then to ask for absolute position several times and see what it returns. 
            Are all 10 the same?  Are they the same as the absolute position returned during
            the module's __init__()?
         """
-        print('steeringDiag')
-        # Get the absolute position 10 times and print it, spaced by 0.1 second.
-        for x in range(10):
-            print(self.absEnc.getAbsolutePosition())
-            time.sleep(0.1) # In general, using time.sleep() is not a good idea in a robot program; doing this for diagnostics only.
+        # print('steeringDiag')
+        # # Get the absolute position 10 times and print it, spaced by 0.1 second.
+        # for x in range(10):
+        #     print(self.absEnc.getAbsolutePosition())
+        #     time.sleep(0.1) # In general, using time.sleep() is not a good idea in a robot program; doing this for diagnostics only.
 
