@@ -65,6 +65,8 @@ class Myrobot(wpilib.TimedRobot):
 
         self.WRIST_MAX = 30 # We're calling the "tucked in position" 0 degrees
 
+        self.WRIST_MID = -80
+
         self.WRIST_MIN = -115 # Degrees, wrist dropped in collecting position at the ground level.
 
         self.wristDesiredPos = self.WRIST_START
@@ -113,7 +115,11 @@ class Myrobot(wpilib.TimedRobot):
         
         self.wristGroudLevel = self.wristDegrees_to_counts(self.WRIST_MIN)
 
+        
+        
         self.wristInnerPos = self.wristDegrees_to_counts(self.WRIST_MAX)
+
+        self.wristMiddlePos = self.wristDegrees_to_counts(self.WRIST_MID)
 
         #this is the wrist PID loop that can controll the motor deceleration and acceleration bettween certain points and with handling weight and pull better
         
@@ -273,7 +279,6 @@ class Myrobot(wpilib.TimedRobot):
             xSpeed = 0
             ySpeed = 0 
             rot = 0
-            self.wiggleTimer.advanceIfElapsed(3)
    
 
         self.swerve.drive(xSpeed, ySpeed, rot, fieldRelative)
@@ -409,7 +414,7 @@ class Myrobot(wpilib.TimedRobot):
        
 
 
-        #rTrigger = self.xbox.getRightTriggerAxis()
+        rTrigger = self.xboxO.getRightTriggerAxis()
         AButton = self.xboxO.getAButton()
         BButton = self.xboxO.getBButton()
         XButton = self.xboxO.getXButton()
@@ -439,6 +444,9 @@ class Myrobot(wpilib.TimedRobot):
             self.state = 6
         elif rStickButton: # wrist down
             self.state = 7
+        elif rTrigger > 0.1:
+            self.state = 8
+
                 
 
         # these are the actions dealing with the states
@@ -468,6 +476,9 @@ class Myrobot(wpilib.TimedRobot):
             elif self.state == 7:
                 self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristGroudLevel)
                 self.wristDesiredPos = self.WRIST_MIN
+            elif self.state == 8:
+                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.highCube)
+                self.wristDesiredPos = self.WRIST_MID
             else:
                 self.state = 0
 
@@ -521,32 +532,32 @@ class Myrobot(wpilib.TimedRobot):
     def driveWithJoystick(self, fieldRelative: bool) -> None:
         
 
-        if self.xboxD.getRightStickButton():
+        if self.xboxD.getRightTriggerAxis() >= 0.1:
             self.halfSpeed = True
-        elif self.xboxD.getLeftStickButton():
+        elif self.xboxD.getLeftTriggerAxis() >= 0.1:
             self.halfSpeed = False
         
         if self.halfSpeed == True:
-            joystick_y = -self.xboxD.getLeftY() / 4
-            joystick_y = applyDeadband(joystick_y, 0.02)
+            joystick_y = self.joystickscaling(-self.xboxD.getLeftY()) / 4
+            #joystick_y = applyDeadband(joystick_y, 0.02)
             xSpeed = self.xSpeedLimiter.calculate(joystick_y) * SwerveDrivetrain.getMaxSpeed()
 
-            joystick_x = -self.xboxD.getLeftX() / 4
-            joystick_x = applyDeadband(joystick_x, 0.02)
+            joystick_x = self.joystickscaling(-self.xboxD.getLeftX()) / 4
+            #joystick_x = applyDeadband(joystick_x, 0.02)
             ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
         
         else:
 
             # Get the x speed. We are inverting this because Xbox controllers return
             # negative values when we push forward.
-            joystick_y = -self.xboxD.getLeftY() / 2
-            joystick_y = applyDeadband(joystick_y, 0.02)
+            joystick_y = self.joystickscaling(-self.xboxD.getLeftY()) 
+            #joystick_y = applyDeadband(joystick_y, 0.02)
             xSpeed = self.xSpeedLimiter.calculate(joystick_y) * SwerveDrivetrain.getMaxSpeed()
 
             # Get the y speed. We are inverting this because Xbox controllers return
             # negative values when we push to the left.
-            joystick_x = -self.xboxD.getLeftX() / 2
-            joystick_x = applyDeadband(joystick_x, 0.02)
+            joystick_x = self.joystickscaling(-self.xboxD.getLeftX()) 
+            #joystick_x = applyDeadband(joystick_x, 0.02)
             ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
 
 
@@ -592,6 +603,12 @@ class Myrobot(wpilib.TimedRobot):
 
         counts = (degrees * (2048/360)) * self.WRIST_GEAR_RATIO
         return counts
+
+    def joystickscaling(self, input):
+
+        a = 0.8
+        output = a * input * input * input + (1 - a) * input
+        return output
     
 if __name__ == '__main__':
     wpilib.run(Myrobot)
