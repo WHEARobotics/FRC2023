@@ -266,4 +266,5 @@ class SwerveModule:                                                             
         # for x in range(10):
         #     print(self.absEnc.getAbsolutePosition())
         #     time.sleep(0.1) # In general, using time.sleep() is not a good idea in a robot program; doing this for diagnostics only.
-
+    def toggleDriveMotorInverted(self):
+        self.driveMotor.setInverted(not self.driveMotor.getInverted())

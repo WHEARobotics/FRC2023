@@ -61,6 +61,8 @@ class SwerveDrivetrain:
         self.swerve_modules = [ self.frontLeft, self.frontRight, self.backLeft, self.backRight ]
 
 
+
+
         self.swerveModuleStates = [SwerveModuleState(), SwerveModuleState(), SwerveModuleState(), SwerveModuleState()]
 
         # Instead of an analog gyro, let's use the ADXRS450_Gyro class, like MAKO does in the mecanum folder. 
@@ -129,7 +131,7 @@ class SwerveDrivetrain:
         self.fieldSim = Field2d()
         SmartDashboard.putData('Field', self.fieldSim)
 
-        self.gyro.reset()
+        self.gyro.calibrate()#8/3/2023 changed gyro reset to calibrate to possibly stop it from drifting
 
     def periodic(self):
         self._updateOdometry()
@@ -188,3 +190,10 @@ class SwerveDrivetrain:
         self.frontLeft.resetSteering()
         self.backRight.resetSteering()
         self.backLeft.resetSteering()
+
+    def toggleDriveMotorsInverted(self):
+        for module in self.swerve_modules:
+            module.toggleDriveMotorInverted()
+
+    # def disabledCoast(self):
+    #     self.swerve_modules
