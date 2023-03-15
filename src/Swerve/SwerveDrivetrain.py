@@ -7,7 +7,6 @@ from wpilib import Field2d, SmartDashboard
 import wpilib
 
 import wpimath.kinematics._kinematics
-import typing
 import wpimath.geometry._geometry
 
 import math
@@ -98,13 +97,13 @@ class SwerveDrivetrain:
 
         self.module_positions = [
             # Front left
-            Translation2d(half_wheel_base, half_track_width),
+            self.frontLeftLocation,
             # Front right
-            Translation2d(half_wheel_base, -half_track_width),
+            self.frontRightLocation,
             # Back left
-            Translation2d(-half_wheel_base, half_track_width),
+            self.backLeftLocation,
             # Back right
-            Translation2d(-half_wheel_base, -half_track_width)
+            self.backRightLocation
         ]
         """
         self.module_positions = [

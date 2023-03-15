@@ -21,8 +21,6 @@ class SwerveModule:                                                             
 
     
     WHEELDIAMETER = 4 * 0.0254 #4 inch diameter for the wheel times the conversion to meters
-    TRACKWIDTH = 22.25 * 0.0254 #both back and front have the module center to other mod center as 22 and 1/4th
-    WHEELBASE = 22.75 * 0.0254 #left side of front mod to back mod #right is 26 7/8
     TURNING_GEAR_RATIO = 150.0/7.0 # Docs call it a 150/7:1
     DRIVE_GEAR_RATIO = 6.75
     #WHEELCIRCUMFERENCE = WHEELDIAMETER * pi
