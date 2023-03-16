@@ -604,8 +604,6 @@ class Myrobot(wpilib.TimedRobot):
         self.joystick_y = applyDeadband(self.joystick_y , 0.1)
 
 
-        
-
 
         if self.xboxD.getRightTriggerAxis():
             self.halfSpeed = True
