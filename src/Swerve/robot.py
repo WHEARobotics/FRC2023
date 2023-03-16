@@ -2,6 +2,7 @@
 
 import wpilib
 import wpilib.drive
+import wpimath
 from wpimath import applyDeadband
 from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Rotation2d, Translation2d
@@ -401,6 +402,7 @@ class Myrobot(wpilib.TimedRobot):
         wpilib.SmartDashboard.putNumber('claw/supplycurrent', self.claw.getSupplyCurrent())
         #wpilib.SmartDashboard.putString('DB/String 9',"robot angle: {:4.2f}".format(self.swerve.get_heading().degrees() % 360))
         #wpilib.SmartDashboard.putString('DB/String 4',"Mod4TurnEnc: {:4.2f}".format(self.mod4turnEnc % 360))
+        
 
 
         # EVERYTHING BELOW IS TAKEN FROM WIGGLETON ROBOT.PY
@@ -416,8 +418,8 @@ class Myrobot(wpilib.TimedRobot):
         Wrist_Angle_Deg = self.wristCounts_to_degrees(wristPos)
 
  
-        # wpilib.SmartDashboard.putString('DB/String 4',"Arm_Pos_Degrees: {:4.2f}".format(Arm_Angle_Deg))
-        # wpilib.SmartDashboard.putString('DB/String 4',"Time: {:3.2f}".format(self.wiggleTimer.get()))
+        wpilib.SmartDashboard.putString('DB/String 9',"Arm_Pos_Degrees: {:4.2f}".format(self.xboxD.getLeftY()))
+        wpilib.SmartDashboard.putString('DB/String 8',"Time: {:3.2f}".format(self.xboxD.getLeftX()))
         # wpilib.SmartDashboard.putString('DB/String 8',"Wrist_Pos_Deg: {:4.2f}".format(Wrist_Angle_Deg))
        
         AButton = self.xboxO.getAButton()
@@ -497,6 +499,7 @@ class Myrobot(wpilib.TimedRobot):
         #CLAW CODE DEALING WITH STATES AND STATOR SPIKES
 
         #intake state machine that take actions from the controller and trigger the states
+        stator_current = self.claw.getStatorCurrent()
 
         if AButton and self.intake_state == 0 and time.time() > self.intake_cooldown: #cube INTAKE
             self.intake_state = 1 
@@ -550,7 +553,6 @@ class Myrobot(wpilib.TimedRobot):
             if not YButton:
                 self.intake_state = 0
             # Get current stator
-            stator_current = self.claw.getStatorCurrent()
         if self.intake_state == 4:
             print("Intake shutdown")
             self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
@@ -596,10 +598,14 @@ class Myrobot(wpilib.TimedRobot):
                 if time.time() > self.last_invert_time + INVERT_DELAY_TIME_IN_SECONDS:
                     self.invert_request_state = INVERT_STATE_WAITING_FOR_BUTTON
 
+        self.joystick_x = -self.xboxD.getLeftX()
+        self.joystick_y = -self.xboxD.getLeftY()
+        self.joystick_x = applyDeadband(self.joystick_x , 0.1)
+        self.joystick_y = applyDeadband(self.joystick_y , 0.1)
 
-        #applying deadband to joystick
-        joystick_x = applyDeadband(joystick_x, 0.1)
-        joystick_y = applyDeadband(joystick_y, 0.1)
+
+        
+
 
         if self.xboxD.getRightTriggerAxis():
             self.halfSpeed = True
@@ -607,23 +613,25 @@ class Myrobot(wpilib.TimedRobot):
             self.halfSpeed = False
 
         if self.halfSpeed == True:
-            joystick_y = -self.xboxD.getLeftY() / 2
-            xSpeed = self.xSpeedLimiter.calculate(joystick_y) * SwerveDrivetrain.getMaxSpeed()
+            self.joystick_y / 2
+            xSpeed = self.xSpeedLimiter.calculate(self.joystick_y) * SwerveDrivetrain.getMaxSpeed()
 
-            joystick_x = -self.xboxD.getLeftX() / 2
-            ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
+            self.joystick_x / 2
+            self.ySpeed = self.ySpeedLimiter.calculate(self.joystick_x) * SwerveDrivetrain.MAX_SPEED
         
         else:
 
             # Get the x speed. We are inverting this because Xbox controllers return
             # negative values when we push forward.
-            joystick_y = self.joystickscaling(-self.xboxD.getLeftY())
-            xSpeed = self.xSpeedLimiter.calculate(joystick_y) * SwerveDrivetrain.getMaxSpeed()
+            self.joystick_y = self.joystickscaling(self.joystick_y)
+            xSpeed = self.xSpeedLimiter.calculate(self.joystick_y) * SwerveDrivetrain.getMaxSpeed()
 
             # Get the y speed. We are inverting this because Xbox controllers return
             # negative values when we push to the left.
-            joystick_x = self.joystickscaling(-self.xboxD.getLeftX())
-            ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
+            self.joystick_x = self.joystickscaling(self.joystick_x)
+            ySpeed = self.ySpeedLimiter.calculate(self.joystick_x) * SwerveDrivetrain.MAX_SPEED
+
+        
 
 
 
@@ -633,7 +641,7 @@ class Myrobot(wpilib.TimedRobot):
         # mathematics). Xbox controllers return positive values when you pull to
         # the right by default.
         rot = -self.xboxD.getRightX()
-        rot = applyDeadband(rot, 0.02)
+        rot = applyDeadband(rot, 0.1)
         rot = self.rotLimiter.calculate(rot) * SwerveDrivetrain.MAX_ANGULAR_SPEED
 
         self.swerve.drive(xSpeed, ySpeed, rot, fieldRelative)
