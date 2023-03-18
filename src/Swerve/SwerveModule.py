@@ -191,7 +191,8 @@ class SwerveModule:                                                             
         return count * (360/2048) / self.TURNING_GEAR_RATIO
     
     def driveCountToMeters(self, x):
-        return (x/2048) * (self.WHEELDIAMETER * math.pi) / self.DRIVE_GEAR_RATIO #6.75 : 1
+        output = (x / 2048) * (self.WHEELDIAMETER * math.pi) / self.DRIVE_GEAR_RATIO #6.75 : 1
+        return output
     
     def metersToDriveCount(self, x):
         return (2048/x) / (self.WHEELDIAMETER * math.pi) * self.DRIVE_GEAR_RATIO
