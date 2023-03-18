@@ -5,7 +5,7 @@ import wpilib.drive
 import wpimath
 from wpimath import applyDeadband
 from wpimath.filter import SlewRateLimiter
-from wpimath.geometry import Rotation2d, Translation2d
+from wpimath.geometry import Rotation2d, Translation2d, Pose2d
 from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
 import ctre
 import time
@@ -27,7 +27,11 @@ class Myrobot(wpilib.TimedRobot):
 
     def robotInit(self):
 
-        wpilib.SmartDashboard.putStringArray('Auto List', ['Auto 1', 'Auto 2'])
+        self.AUTO_SCORING = 'Cube Scoring'
+
+        self.AUTO_DOCKING = 'Docking'
+
+        wpilib.SmartDashboard.putStringArray('Auto List', [self.AUTO_SCORING, self.AUTO_DOCKING])
 
         self.wiggleTimer = wpilib.Timer()
 
@@ -267,7 +271,7 @@ class Myrobot(wpilib.TimedRobot):
 
     def autonomousPeriodic(self):
 
-
+        self.swerve.periodic()
 
         fieldRelative = False
     
@@ -279,12 +283,91 @@ class Myrobot(wpilib.TimedRobot):
         # meters = self.swerve.frontRight.driveCountToMeters(self.swerve.frontRight.driveMotor.getSelectedSensorPosition)
         # meters = SwerveModule.driveCountToMeters(self.swerve.backLeft.driveMotor.getSelectedSensorPosition)
         # meters = self.swerve.get_pose()
+        autoPos = self.swerve.get_pose()
 
         Wrist_Convertion2 = self.wristDesiredPos -(63 + Arm_Angle_Deg2) #takes the desired position (in or out) and compensates for the angle ofthe arm
         self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristDegrees_to_counts(Wrist_Convertion2))
         
-        # if wpilib.SmartDashboard.give me the DB button
-        if self.autoPlan == 1:
+        #When auto state is 0 it moves forward at half speed until X vaule reaches 1 meter(aka auto state 1)
+        if self.autoPlan == self.AUTO_SCORING:
+            if self.autoState == 0:
+                print("autostate = 0")
+                xSpeed = 0.5
+                ySpeed = 0
+                rot = 0
+                if autoPos.X() >= 1.0:
+                #if self.wiggleTimer.advanceIfElapsed(1):
+                    #print ("timer has passed")
+                    self.autoState = 1
+            elif self.autoState == 1:
+                print("autostate = 1")
+                xSpeed = 0
+                ySpeed = 0
+                rot = 0
+                if self.wiggleTimer.advanceIfElapsed(0.5):
+                    print ("timer has passed")
+                    self.autoState = 2
+            elif self.autoState == 2:
+                print("autostate = 2")
+                xSpeed = -0.5
+                ySpeed = 0
+                rot = 0
+                if self.wiggleTimer.advanceIfElapsed(1):
+                    print ("timer has passed")
+                    self.autoState = 3
+            elif self.autoState == 3:
+                print("autostate = 3")
+                xSpeed = 0
+                ySpeed = 0
+                rot = 0
+                if self.wiggleTimer.advanceIfElapsed(0.5):
+                    self.autoState = 4
+            elif self.autoState == 4:
+                print("autostate = 4")
+                xSpeed = 1
+                ySpeed = 1
+                rot = 0
+                if self.wiggleTimer.advanceIfElapsed(1):
+                    self.autoState = 5
+            elif self.autoState == 5:
+                xSpeed = 0
+                ySpeed = 0
+                rot = 0
+                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.highCube)
+                self.wristDesiredPos2 = self.WRIST_MID
+                if self.wiggleTimer.advanceIfElapsed(4):
+                    print ("timer has passed")
+                    self.autoState = 6
+            elif self.autoState == 6:
+                xSpeed = 0
+                ySpeed = 0
+                rot = 0
+                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.groundLevel)
+                self.wristDesiredPos2 = self.WRIST_MAX
+                if self.wiggleTimer.advanceIfElapsed(4):
+                    print ("timer has passed")
+                    self.autoState = 7
+            elif self.autoState == 7:
+                print("autostate = 7")
+                xSpeed = 0
+                ySpeed = 0
+                rot = 1
+                if self.wiggleTimer.advanceIfElapsed(1):
+                    print ("timer has passed")
+                    self.autoState = 8
+            elif self.autoState == 8:
+                print("autostate = 8")
+                xSpeed = 0
+                ySpeed = 0
+                rot = 0
+            # if self.wiggleTimer.advanceIfElapsed(1):
+            #     print ("timer has passed")
+            #     self.autoState = 9
+
+            self.swerve.drive(xSpeed, ySpeed, rot, fieldRelative)
+
+
+        elif self.autoPlan == self.AUTO_DOCKING:
             if self.autoState == 0:
                 print("autostate = 0")
                 xSpeed = 0.5
@@ -354,101 +437,28 @@ class Myrobot(wpilib.TimedRobot):
                 xSpeed = 0
                 ySpeed = 0
                 rot = 0
-                # if self.wiggleTimer.advanceIfElapsed(1):
-                #     print ("timer has passed")
-                #     self.autoState = 9
 
             self.swerve.drive(xSpeed, ySpeed, rot, fieldRelative)
 
-
-        elif self.autoPlan == 2:
-            if self.autoState == 0:
-                print("autostate = 0")
-                xSpeed = 0.5
-                ySpeed = 0
-                rot = 0
-                if self.wiggleTimer.advanceIfElapsed(1):
-                    print ("timer has passed")
-                    self.autoState = 1
-            elif self.autoState == 1:
-                print("autostate = 1")
-                xSpeed = 0
-                ySpeed = 0
-                rot = 0
-                if self.wiggleTimer.advanceIfElapsed(0.5):
-                    print ("timer has passed")
-                    self.autoState = 2
-            elif self.autoState == 2:
-                print("autostate = 2")
-                xSpeed = -0.5
-                ySpeed = 0
-                rot = 0
-                if self.wiggleTimer.advanceIfElapsed(1):
-                    print ("timer has passed")
-                    self.autoState = 3
-            elif self.autoState == 3:
-                print("autostate = 3")
-                xSpeed = 0
-                ySpeed = 0
-                rot = 0
-                if self.wiggleTimer.advanceIfElapsed(0.5):
-                    self.autoState = 4
-            elif self.autoState == 4:
-                print("autostate = 4")
-                xSpeed = 1
-                ySpeed = 1
-                rot = 0
-                if self.wiggleTimer.advanceIfElapsed(1):
-                    self.autoState = 5
-            elif self.autoState == 5:
-                xSpeed = 0
-                ySpeed = 0
-                rot = 0
-                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.highCube)
-                self.wristDesiredPos2 = self.WRIST_MID
-                if self.wiggleTimer.advanceIfElapsed(4):
-                    print ("timer has passed")
-                    self.autoState = 6
-            elif self.autoState == 6:
-                xSpeed = 0
-                ySpeed = 0
-                rot = 0
-                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.groundLevel)
-                self.wristDesiredPos2 = self.WRIST_MAX
-                if self.wiggleTimer.advanceIfElapsed(4):
-                    print ("timer has passed")
-                    self.autoState = 7
-            elif self.autoState == 7:
-                print("autostate = 7")
-                xSpeed = 0
-                ySpeed = 0
-                rot = 1
-                if self.wiggleTimer.advanceIfElapsed(1):
-                    print ("timer has passed")
-                    self.autoState = 8
-            elif self.autoState == 8:
-                print("autostate = 8")
-                xSpeed = 0
-                ySpeed = 0
-                rot = 0
-
-            self.swerve.drive(xSpeed, ySpeed, rot, fieldRelative)
+        wpilib.SmartDashboard.putString('DB/String 8', str(self.autoState))
+        wpilib.SmartDashboard.putString('DB/String 7', str(autoPos.X()))
+        wpilib.SmartDashboard.putString('DB/String 6', str(autoPos.Y()))
 
 
     def autonomousExit(self):
         
         self.wiggleTimer.stop()
 
-        wpilib.SmartDashboard.putString('DB/String 0',"")
-        wpilib.SmartDashboard.putString('DB/String 1',"")
-        wpilib.SmartDashboard.putString('DB/String 2',"")
-        wpilib.SmartDashboard.putString('DB/String 3',"")
-        wpilib.SmartDashboard.putString('DB/String 4',"")
-        wpilib.SmartDashboard.putString('DB/String 5',"")
-        wpilib.SmartDashboard.putString('DB/String 6',"")
-        wpilib.SmartDashboard.putString('DB/String 7',"")
-        wpilib.SmartDashboard.putString('DB/String 8',"")
-        wpilib.SmartDashboard.putString('DB/String 9',"")
+        # wpilib.SmartDashboard.putString('DB/String 0',"")
+        # wpilib.SmartDashboard.putString('DB/String 1',"")
+        # wpilib.SmartDashboard.putString('DB/String 2',"")
+        # wpilib.SmartDashboard.putString('DB/String 3',"")
+        # wpilib.SmartDashboard.putString('DB/String 4',"")
+        # wpilib.SmartDashboard.putString('DB/String 5',"")
+        # wpilib.SmartDashboard.putString('DB/String 6',"")
+        # wpilib.SmartDashboard.putString('DB/String 7',"")
+        # wpilib.SmartDashboard.putString('DB/String 8',"")
+        # wpilib.SmartDashboard.putString('DB/String 9',"")
 
     def teleopInit(self):
 
