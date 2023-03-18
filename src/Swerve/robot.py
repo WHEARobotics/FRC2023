@@ -78,8 +78,8 @@ class Myrobot(wpilib.TimedRobot):
         self.WRIST_GEAR_RATIO = 80
         self.WRIST_START = 30  # 56 degrees from the "tucked in position"
         self.WRIST_MAX = 30 # We're calling the "tucked in position" 0 degrees
-        self.WRIST_MIN = -120 # Degrees, wrist dropped in collecting position at the ground level.
-        self.WRIST_MID = -55
+        self.WRIST_MIN = -121 # Degrees, wrist dropped in collecting position at the ground level.
+        self.WRIST_MID = -90
         self.wristDesiredPos = 15
         self.state = 0 #initializing the state for the arm
 
@@ -89,9 +89,9 @@ class Myrobot(wpilib.TimedRobot):
         #these are all the positions that will be used for the arm
         self.groundLevel = self.armDegrees_to_counts(-63) 
         self.feederStation = self.armDegrees_to_counts(17) 
-        self.midCube = self.armDegrees_to_counts(7) 
-        self.midCone = self.armDegrees_to_counts(13)
-        self.highCube = self.armDegrees_to_counts(5)
+        self.midCube = self.armDegrees_to_counts(2) 
+        self.midCone = self.armDegrees_to_counts(7)
+        self.highCube = self.armDegrees_to_counts(10)
         self.highestpoint = self.armDegrees_to_counts(24)
          
         #positons for wrist
@@ -709,8 +709,10 @@ class Myrobot(wpilib.TimedRobot):
         self.joystick_y = -self.xboxD.getLeftY()
         self.joystick_x = applyDeadband(self.joystick_x , 0.1)
         self.joystick_y = applyDeadband(self.joystick_y , 0.1)
-        self.rot = applyDeadband(self.rot, 0.1)
-        self.rot = self.xboxD.getRightX()
+
+        self.rot = -self.xboxD.getRightX()
+        self.rot = applyDeadband(self.rot, 0.05)
+        
 
 
 
@@ -727,7 +729,6 @@ class Myrobot(wpilib.TimedRobot):
             ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
 
             rot = self.joystickscaling(self.rot)
-            rot = applyDeadband(rot, 0.1)
             rot = self.rotLimiter.calculate(rot) * SwerveDrivetrain.MAX_ANGULAR_SPEED
 
             self.swerve.drive(xSpeed, ySpeed, rot, fieldRelative)
@@ -736,7 +737,7 @@ class Myrobot(wpilib.TimedRobot):
 
             # Get the x speed. We are inverting this because Xbox controllers return
             # negative values when we push forward.
-            joystick_y = self.joystickscaling(joystick_y)
+            joystick_y = self.joystickscaling(self.joystick_y)
             xSpeed = self.xSpeedLimiter.calculate(joystick_y) * SwerveDrivetrain.getMaxSpeed()
 
             # Get the y speed. We are inverting this because Xbox controllers return
@@ -745,7 +746,6 @@ class Myrobot(wpilib.TimedRobot):
             ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
 
             rot = self.joystickscaling(self.rot)
-            rot = applyDeadband(rot, 0.1)
             rot = self.rotLimiter.calculate(rot) * SwerveDrivetrain.MAX_ANGULAR_SPEED
 
             self.swerve.drive(xSpeed, ySpeed, rot, fieldRelative)
@@ -779,7 +779,7 @@ class Myrobot(wpilib.TimedRobot):
         return counts
     
     def joystickscaling(self, input): #this function helps bring an exponential curve in the joystick value and near the zero value it uses less value and is more flat
-        a = 0.8
+        a = 1
         output = a * input * input * input + (1 - a) * input
         return output
     
