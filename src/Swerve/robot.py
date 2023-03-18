@@ -81,7 +81,7 @@ class Myrobot(wpilib.TimedRobot):
         self.WRIST_MIN = -121 # Degrees, wrist dropped in collecting position at the ground level.
         self.WRIST_MID = -90
         self.wristDesiredPos = 15
-        self.state = 0 #initializing the state for the arm
+        self.state = 0 #initializing the state for the arm to activate the state machines
 
         wrist_Range_Counts = self.wristDegrees_to_counts(self.WRIST_MAX - self.WRIST_MIN)
         arm_Range_Counts = self.armDegrees_to_counts(self.ARM_MAX - self.ARM_MIN)
