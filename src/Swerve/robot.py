@@ -26,8 +26,11 @@ class Myrobot(wpilib.TimedRobot):
     #encoder motor values for the absolute position CANCoders in degrees
 
     def robotInit(self):
+        self.AUTO_SCORING = 'Cube Scoring'
 
-        wpilib.SmartDashboard.putStringArray('Auto List', ['Auto 1', 'Auto 2'])
+        self.AUTO_DOCKING = 'Docking'
+
+        wpilib.SmartDashboard.putStringArray('Auto List', [self.AUTO_SCORING, self.AUTO_DOCKING])
 
         self.wiggleTimer = wpilib.Timer()
 
@@ -148,7 +151,7 @@ class Myrobot(wpilib.TimedRobot):
 
 
     def disabledInit(self):
-        self.autoPlan = 1
+        self.autoPlan = self.AUTO_SCORING
 
         
         self.wiggleTimer.reset()
@@ -261,17 +264,11 @@ class Myrobot(wpilib.TimedRobot):
         # self.user_value = wpilib.SmartDashboard.getNumber('DB/Slider 1', 0.0) #0.0 is the similar default value.
 
         self.autoPlan = wpilib.SmartDashboard.getString('Auto Selector', 'did not find it')
-        print(self.autoPlan)
-
-
+        print(self.autoPlan)  
 
     def autonomousPeriodic(self):
-
-
-
         fieldRelative = False
-    
-        
+     
         motorPos2 = self.armmotor.getSelectedSensorPosition()
         Arm_Angle_Deg2 = self.armCounts_to_degrees(motorPos2)
         self.wristDesiredPos2 = 15
@@ -280,88 +277,113 @@ class Myrobot(wpilib.TimedRobot):
         # meters = SwerveModule.driveCountToMeters(self.swerve.backLeft.driveMotor.getSelectedSensorPosition)
         # meters = self.swerve.get_pose()
 
-        Wrist_Convertion2 = self.wristDesiredPos -(63 + Arm_Angle_Deg2) #takes the desired position (in or out) and compensates for the angle ofthe arm
-        self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristDegrees_to_counts(Wrist_Convertion2))
-        
         # if wpilib.SmartDashboard.give me the DB button
-        if self.autoPlan == 1:
-            if self.autoState == 0:
-                print("autostate = 0")
-                xSpeed = 0.5
+        if self.autoPlan == self.AUTO_SCORING:
+            # Enumerate our new auto states
+            AUTOSTATE_LIFTARM = 0 
+            AUTOSTATE_POSITION_WRIST = 1
+            AUTOSTATE_OUTTAKE = 2
+            AUTOSTATE_PARKWRIST = 3
+            AUTOSTATE_PARKARM = 4
+            AUTOSTATE_ESCAPE_COMMUNITY = 5
+
+            HIGHEST_POSITION = self.armDegrees_to_counts(11)  
+            ARM_THRESHOLD = self.highCube
+
+            #high cube is set to 10 and highest position is set to 11 and we set the motor to 
+            #move to 11 degrees but because its not exact it will always be under that amount
+            # so the threshold is set to 10 to stop it. 
+
+            WRIST_MAX_POSITION = self.WRIST_MIN
+            WRIST_THRESHOLD = self.WRIST_MID
+            AUTO_DEADBAND_IN_DEGREES = 2.00
+
+            # wpilib.SmartDashboard.putData('DB/String 0', f"{motorPos2}")
+
+            if self.autoState == AUTOSTATE_LIFTARM:
+                print("autostate = AUTOSTATE_LIFTARM")
+                #if abs(motorPos2 - ARM_THRESHOLD) > AUTO_DEADBAND_IN_DEGREES:
+                print(f"{motorPos2}-{ARM_THRESHOLD} = {motorPos2 - ARM_THRESHOLD}")
+                if motorPos2 <= ARM_THRESHOLD:
+                    self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, HIGHEST_POSITION)
+                else:
+                    self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, ARM_THRESHOLD)
+                    self.autoState = AUTOSTATE_POSITION_WRIST
+            
+                xSpeed = 0
                 ySpeed = 0
                 rot = 0
-                if self.wiggleTimer.advanceIfElapsed(1):
-                    print ("timer has passed")
-                    self.autoState = 1
-            elif self.autoState == 1:
+            elif self.autoState == AUTOSTATE_POSITION_WRIST:
+                print(abs(motorPos2 - ARM_THRESHOLD))
                 print("autostate = 1")
                 xSpeed = 0
                 ySpeed = 0
                 rot = 0
+
+                self.wristDesiredPos2 = WRIST_MAX_POSITION
+                #self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristDegrees_to_counts(WRIST_MAX_POSITION))
+
+                wristPosition = self.wristmotor.getSelectedSensorPosition()
+                wristPositionDegrees = self.wristCounts_to_degrees(wristPosition)
+                print(f"{wristPositionDegrees} - {WRIST_THRESHOLD} = {wristPositionDegrees - WRIST_THRESHOLD}")
+                if abs(wristPositionDegrees - WRIST_THRESHOLD) < AUTO_DEADBAND_IN_DEGREES:
+                    #self.wristmotor.set(ctre._ctre.ControlMode.PercentOutput, 0)
+                    self.autoState = AUTOSTATE_OUTTAKE
+            elif self.autoState == AUTOSTATE_OUTTAKE:
+                print("autostate = AUTOSTATE_OUTTAKE")
                 if self.wiggleTimer.advanceIfElapsed(0.5):
-                    print ("timer has passed")
-                    self.autoState = 2
-            elif self.autoState == 2:
-                print("autostate = 2")
+                    self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.5) 
+                if self.wiggleTimer.advanceIfElapsed(1.5):
+                    self.autoState = AUTOSTATE_PARKWRIST
+            elif self.autoState == AUTOSTATE_PARKWRIST:
+                print("autostate = 3")
+                raise Exception("Reached autostate 3")
                 xSpeed = -0.5
                 ySpeed = 0
                 rot = 0
-                if self.wiggleTimer.advanceIfElapsed(1):
-                    print ("timer has passed")
-                    self.autoState = 3
-            elif self.autoState == 3:
-                print("autostate = 3")
-                xSpeed = 0
-                ySpeed = 0
-                rot = 0
-                if self.wiggleTimer.advanceIfElapsed(0.5):
-                    self.autoState = 4
-            elif self.autoState == 4:
-                print("autostate = 4")
-                xSpeed = 1
-                ySpeed = 1
-                rot = 0
-                if self.wiggleTimer.advanceIfElapsed(1):
-                    self.autoState = 5
-            elif self.autoState == 5:
-                xSpeed = 0
-                ySpeed = 0
-                rot = 0
-                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.highCube)
-                self.wristDesiredPos2 = self.WRIST_MID
-                if self.wiggleTimer.advanceIfElapsed(4):
-                    print ("timer has passed")
-                    self.autoState = 6
-            elif self.autoState == 6:
-                xSpeed = 0
-                ySpeed = 0
-                rot = 0
-                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.groundLevel)
-                self.wristDesiredPos2 = self.WRIST_MAX
-                if self.wiggleTimer.advanceIfElapsed(4):
-                    print ("timer has passed")
-                    self.autoState = 7
-            elif self.autoState == 7:
-                print("autostate = 7")
-                xSpeed = 0
-                ySpeed = 0
-                rot = 1
-                if self.wiggleTimer.advanceIfElapsed(1):
-                    print ("timer has passed")
-                    self.autoState = 8
-            elif self.autoState == 8:
-                print("autostate = 8")
-                xSpeed = 0
-                ySpeed = 0
-                rot = 0
+            #         self.autoState = 5
+            # elif self.autoState == 5:
+            #     xSpeed = 0
+            #     ySpeed = 0
+            #     rot = 0
+            #     self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.highCube)
+            #     self.wristDesiredPos2 = self.WRIST_MID
+            #     if self.wiggleTimer.advanceIfElapsed(4):
+            #         print ("timer has passed")
+            #         self.autoState = 6
+            # elif self.autoState == 6:
+            #     xSpeed = 0
+            #     ySpeed = 0
+            #     rot = 0
+            #     self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.groundLevel)
+            #     self.wristDesiredPos2 = self.WRIST_MAX
+            #     if self.wiggleTimer.advanceIfElapsed(4):
+            #         print ("timer has passed")
+            #         self.autoState = 7
+            # elif self.autoState == 7:
+            #     print("autostate = 7")
+            #     xSpeed = 0
+            #     ySpeed = 0
+            #     rot = 1
+            #     if self.wiggleTimer.advanceIfElapsed(1):
+            #         print ("timer has passed")
+            #         self.autoState = 8
+            # elif self.autoState == 8:
+            #     print("autostate = 8")
+            #     xSpeed = 0
+            #     ySpeed = 0
+            #     rot = 0
                 # if self.wiggleTimer.advanceIfElapsed(1):
                 #     print ("timer has passed")
                 #     self.autoState = 9
 
+            Wrist_Convertion2 = self.wristDesiredPos2 -(63 + Arm_Angle_Deg2) #takes the desired position (in or out) and compensates for the angle ofthe arm
+            self.wristmotor.set(ctre._ctre.ControlMode.MotionMagic, self.wristDegrees_to_counts(Wrist_Convertion2))
+
             self.swerve.drive(xSpeed, ySpeed, rot, fieldRelative)
 
 
-        elif self.autoPlan == 2:
+        elif self.autoPlan == self.AUTO_DOCKING:
             if self.autoState == 0:
                 print("autostate = 0")
                 xSpeed = 0.5
