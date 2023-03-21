@@ -176,7 +176,7 @@ class Myrobot(wpilib.TimedRobot):
 
     def disabledPeriodic(self):
 
-
+        position = self.swerve.get_pose()
         moduleFRState = self.swerve.frontRight.getState()
         moduleFLState = self.swerve.frontLeft.getState()
         moduleBRState = self.swerve.backRight.getState()
@@ -193,6 +193,9 @@ class Myrobot(wpilib.TimedRobot):
         wpilib.SmartDashboard.putString('DB/String 1',"FL: {:4.1f}  {:4.1f}".format(moduleFLState.angle.degrees() % 360, modFLCAN % 360))
         wpilib.SmartDashboard.putString('DB/String 2',"BR: {:4.1f}  {:4.1f}".format(moduleBRState.angle.degrees() % 360, modBRCAN % 360))
         wpilib.SmartDashboard.putString('DB/String 3',"BL: {:4.1f}  {:4.1f}".format(moduleBLState.angle.degrees() % 360, modBLCAN % 360))
+
+        wpilib.SmartDashboard.putString('DB/String 4',"Xposition: {:4.2f}".format(position.X()))
+        wpilib.SmartDashboard.putString('DB/String 5',"Yposition: {:4.2f}".format(position.Y()))
 
         #wpilib.SmartDashboard.putString('DB/String 5',"FR: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[1].angle.degrees() % 360, moduleFRState.speed))
         #wpilib.SmartDashboard.putString('DB/String 6',"FL: {:4.1f}  {:4.1f}".format(self.swerve.swerveModuleStates[0].angle.degrees() % 360, moduleFLState.speed))
@@ -254,6 +257,7 @@ class Myrobot(wpilib.TimedRobot):
         #self.wiggleTimer.restart()
         
         self.autoState = 0
+        GYRO_OFFSET = 180
 
         self.swerve.gyro.reset()
 
@@ -270,6 +274,8 @@ class Myrobot(wpilib.TimedRobot):
     def autonomousPeriodic(self):
 
         fieldRelative = False
+
+        self.swerve.periodic()
      
         motorPos2 = self.armmotor.getSelectedSensorPosition()
         Arm_Angle_Deg2 = self.armCounts_to_degrees(motorPos2)
@@ -290,9 +296,11 @@ class Myrobot(wpilib.TimedRobot):
             AUTOSTATE_PARK_WRIST_AND_ARM = 4
             AUTOSTATE_DRIVE_SIDEWAYS = 5
             AUTOSTATE_ESCAPE_COMMUNITY = 6
+            AUTO_METER = -1.0
 
             HIGHEST_POSITION = self.armDegrees_to_counts(11)  
             ARM_THRESHOLD = self.highCube
+
 
             #high cube is set to 10 and highest position is set to 11 and we set the motor to 
             #move to 11 degrees but because its not exact it will always be under that amount
@@ -300,9 +308,15 @@ class Myrobot(wpilib.TimedRobot):
 
             WRIST_MAX_POSITION = self.WRIST_MIN
             WRIST_THRESHOLD = self.WRIST_MID
+            #THIS IS DEADBAND FOR WRIST 
             AUTO_DEADBAND_IN_DEGREES = 2.0
 
             # wpilib.SmartDashboard.putData('DB/String 0', f"{motorPos2}")
+            #wpilib.SmartDashboard.putString('DB/String 8',"Wrist_Pos_Deg: {:4.2f}".format(autopos.angle()))
+            wpilib.SmartDashboard.putString('DB/String 2',"Xposition: {:4.2f}".format(AUTOSTATE_PARK_WRIST_AND_ARM))
+            wpilib.SmartDashboard.putString('DB/String 0',"Xposition: {:4.2f}".format(autopos.X()))
+            wpilib.SmartDashboard.putString('DB/String 1',"Yposition: {:4.2f}".format(autopos.Y()))
+
 
             if self.autoState == AUTOSTATE_LIFTARM:
                 print("autostate = AUTOSTATE_LIFTARM")
@@ -337,24 +351,34 @@ class Myrobot(wpilib.TimedRobot):
 
             elif self.autoState == AUTOSTATE_OUTTAKE:
                 print("autostate = AUTOSTATE_OUTTAKE")
-                xSpeed = -0.5
+                xSpeed = 0
                 ySpeed = 0
                 rot = 0
-                self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.5) 
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.5)
+                # self.wiggleTimer.reset() 
                 if self.wiggleTimer.advanceIfElapsed(5.0):
                     self.autoState = AUTOSTATE_DRIVE_BACK
 
             elif self.autoState == AUTOSTATE_DRIVE_BACK:
                 print("autostate = AUTOSTATE_DRIVE_BACK")  
-                xSpeed = -0.5
+                xSpeed = -0.3
                 ySpeed = 0
                 rot = 0
                 self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0)
-                if autopos.X() >= 1:
-                    self.autoState == AUTOSTATE_PARK_WRIST_AND_ARM
+                if autopos.X() <= AUTO_METER:
+                    xSpeed = 0
+                    ySpeed = 0
+                    rot = 0
+                    self.wiggleTimer.reset() 
+                    if self.wiggleTimer.advanceIfElapsed(5.0):
+                        self.autoState = AUTOSTATE_PARK_WRIST_AND_ARM
+                    print ("passed")
                     
             elif self.autoState == AUTOSTATE_PARK_WRIST_AND_ARM:
                 print("autostate = AUTOSTATE_PARK_WRIST_AND_ARM")
+                xSpeed = 0
+                ySpeed = 0
+                rot = 0
                 self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.groundLevel)
                 self.wristDesiredPos = self.WRIST_MAX
                 self.autoState = AUTOSTATE_DRIVE_SIDEWAYS
@@ -751,7 +775,7 @@ class Myrobot(wpilib.TimedRobot):
         self.joystick_x = applyDeadband(self.joystick_x , 0.1)
         self.joystick_y = applyDeadband(self.joystick_y , 0.1)
 
-        self.rot = -self.xboxD.getRightX()
+        self.rot = self.xboxD.getRightX()
         self.rot = applyDeadband(self.rot, 0.05)
         
 
