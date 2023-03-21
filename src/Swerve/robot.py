@@ -279,7 +279,7 @@ class Myrobot(wpilib.TimedRobot):
 
         # if wpilib.SmartDashboard.give me the DB button
         if self.autoPlan == self.AUTO_SCORING:
-            # Enumerate our new auto states
+             # Enumerate our new auto states
             AUTOSTATE_LIFTARM = 0 
             AUTOSTATE_POSITION_WRIST = 1
             AUTOSTATE_OUTTAKE = 2
