@@ -266,12 +266,15 @@ class Myrobot(wpilib.TimedRobot):
         self.autoPlan = wpilib.SmartDashboard.getString('Auto Selector', 'did not find it')
         print(self.autoPlan)  
 
+
     def autonomousPeriodic(self):
+
         fieldRelative = False
      
         motorPos2 = self.armmotor.getSelectedSensorPosition()
         Arm_Angle_Deg2 = self.armCounts_to_degrees(motorPos2)
         self.wristDesiredPos2 = 15
+        autopos = self.swerve.get_pose()
         
         # meters = self.swerve.frontRight.driveCountToMeters(self.swerve.frontRight.driveMotor.getSelectedSensorPosition)
         # meters = SwerveModule.driveCountToMeters(self.swerve.backLeft.driveMotor.getSelectedSensorPosition)
@@ -283,9 +286,10 @@ class Myrobot(wpilib.TimedRobot):
             AUTOSTATE_LIFTARM = 0 
             AUTOSTATE_POSITION_WRIST = 1
             AUTOSTATE_OUTTAKE = 2
-            AUTOSTATE_PARKWRIST = 3
-            AUTOSTATE_PARKARM = 4
-            AUTOSTATE_ESCAPE_COMMUNITY = 5
+            AUTOSTATE_DRIVE_BACK = 3
+            AUTOSTATE_PARK_WRIST_AND_ARM = 4
+            AUTOSTATE_DRIVE_SIDEWAYS = 5
+            AUTOSTATE_ESCAPE_COMMUNITY = 6
 
             HIGHEST_POSITION = self.armDegrees_to_counts(11)  
             ARM_THRESHOLD = self.highCube
@@ -296,12 +300,15 @@ class Myrobot(wpilib.TimedRobot):
 
             WRIST_MAX_POSITION = self.WRIST_MIN
             WRIST_THRESHOLD = self.WRIST_MID
-            AUTO_DEADBAND_IN_DEGREES = 2.00
+            AUTO_DEADBAND_IN_DEGREES = 2.0
 
             # wpilib.SmartDashboard.putData('DB/String 0', f"{motorPos2}")
 
             if self.autoState == AUTOSTATE_LIFTARM:
                 print("autostate = AUTOSTATE_LIFTARM")
+                xSpeed = 0
+                ySpeed = 0
+                rot = 0
                 #if abs(motorPos2 - ARM_THRESHOLD) > AUTO_DEADBAND_IN_DEGREES:
                 print(f"{motorPos2}-{ARM_THRESHOLD} = {motorPos2 - ARM_THRESHOLD}")
                 if motorPos2 <= ARM_THRESHOLD:
@@ -309,10 +316,7 @@ class Myrobot(wpilib.TimedRobot):
                 else:
                     self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, ARM_THRESHOLD)
                     self.autoState = AUTOSTATE_POSITION_WRIST
-            
-                xSpeed = 0
-                ySpeed = 0
-                rot = 0
+                
             elif self.autoState == AUTOSTATE_POSITION_WRIST:
                 print(abs(motorPos2 - ARM_THRESHOLD))
                 print("autostate = 1")
@@ -328,19 +332,34 @@ class Myrobot(wpilib.TimedRobot):
                 print(f"{wristPositionDegrees} - {WRIST_THRESHOLD} = {wristPositionDegrees - WRIST_THRESHOLD}")
                 if abs(wristPositionDegrees - WRIST_THRESHOLD) < AUTO_DEADBAND_IN_DEGREES:
                     #self.wristmotor.set(ctre._ctre.ControlMode.PercentOutput, 0)
+                    # if self.wiggleTimer.advanceIfElapsed(4.0):
                     self.autoState = AUTOSTATE_OUTTAKE
+
             elif self.autoState == AUTOSTATE_OUTTAKE:
                 print("autostate = AUTOSTATE_OUTTAKE")
-                if self.wiggleTimer.advanceIfElapsed(0.5):
-                    self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.5) 
-                if self.wiggleTimer.advanceIfElapsed(1.5):
-                    self.autoState = AUTOSTATE_PARKWRIST
-            elif self.autoState == AUTOSTATE_PARKWRIST:
-                print("autostate = 3")
-                raise Exception("Reached autostate 3")
                 xSpeed = -0.5
                 ySpeed = 0
                 rot = 0
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.5) 
+                if self.wiggleTimer.advanceIfElapsed(5.0):
+                    self.autoState = AUTOSTATE_DRIVE_BACK
+
+            elif self.autoState == AUTOSTATE_DRIVE_BACK:
+                print("autostate = AUTOSTATE_DRIVE_BACK")  
+                xSpeed = -0.5
+                ySpeed = 0
+                rot = 0
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0)
+                if autopos.X() >= 1:
+                    self.autoState == AUTOSTATE_PARK_WRIST_AND_ARM
+                    
+            elif self.autoState == AUTOSTATE_PARK_WRIST_AND_ARM:
+                print("autostate = AUTOSTATE_PARK_WRIST_AND_ARM")
+                self.armmotor.set(ctre._ctre.ControlMode.MotionMagic, self.groundLevel)
+                self.wristDesiredPos = self.WRIST_MAX
+                self.autoState = AUTOSTATE_DRIVE_SIDEWAYS
+            elif self.autoState == AUTOSTATE_DRIVE_SIDEWAYS:
+                raise Exception("Reached autostate 5")
             #         self.autoState = 5
             # elif self.autoState == 5:
             #     xSpeed = 0
