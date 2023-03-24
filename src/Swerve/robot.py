@@ -301,7 +301,7 @@ class Myrobot(wpilib.TimedRobot):
             AUTOSTATE_DRIVE_SIDEWAYS = 4
             AUTOSTATE_ESCAPE_COMMUNITY = 5
             AUTO_STOPPING = 6
-            AUTO_METER = -1.0
+            AUTO_METER = -0.4
 
             UPPER_POSITION = self.armDegrees_to_counts(11)  
             ARM_UPPER_THRESHOLD = self.highCube
@@ -325,7 +325,7 @@ class Myrobot(wpilib.TimedRobot):
             AUTOSTATE_DRIVE_SIDEWAYS = 4
             AUTOSTATE_ESCAPE_COMMUNITY = 5
             AUTO_STOPPING = 6
-            AUTO_METER = -1.0
+            AUTO_METER = -0.4
 
             UPPER_POSITION = self.armDegrees_to_counts(11)  
             ARM_UPPER_THRESHOLD = self.highCube
@@ -338,7 +338,7 @@ class Myrobot(wpilib.TimedRobot):
             #move to 11 degrees but because its not exact it will always be under that amount
             # so the threshold is set to 10 to stop it. 
 
-            WRIST_OUT_POSITION = self.WRIST_MIN
+            WRIST_OUT_POSITION = -89
             WRIST_OUT_THRESHOLD = self.WRIST_MID
             
             
@@ -421,11 +421,11 @@ class Myrobot(wpilib.TimedRobot):
                 armDesiredPosition = self.groundLevel
                 if self.autoPlan == self.AUTO_SCORING_LEFT:
                     ySpeed = -0.5
-                    if autopos.Y() <= -1.0:
+                    if autopos.Y() <= -0.4:
                         self.autoState = AUTOSTATE_ESCAPE_COMMUNITY
                 else:
                     ySpeed = 0.5
-                    if autopos.Y() >= 1.0:
+                    if autopos.Y() >= 0.4:
                         self.autoState = AUTOSTATE_ESCAPE_COMMUNITY
             elif self.autoState == AUTOSTATE_ESCAPE_COMMUNITY:
                 self.wristDesiredPos2 = self.WRIST_MAX  
@@ -433,7 +433,7 @@ class Myrobot(wpilib.TimedRobot):
                 xSpeed = -0.5
                 ySpeed = 0
                 rot = 0
-                if autopos.X() <= -5.0:
+                if autopos.X() <= -4.0:
                     self.autoState = AUTO_STOPPING
             else: #including auto stopping
                 self.wristDesiredPos2 = self.WRIST_MAX  
@@ -772,17 +772,17 @@ class Myrobot(wpilib.TimedRobot):
         if AButton and self.intake_state == 0 and time.time() > self.intake_cooldown: #cube INTAKE
             self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.4)
             self.intake_state = 1 
-        elif stator_current > 70:
+        elif stator_current > 70: #CUBE stator current value
             self.intake_state = 2
-        elif YButton and self.intake_state == 0 and time.time() > self.intake_cooldown: #cone OUTAKE
-            self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.75)
+        elif XButton and self.intake_state == 0 and time.time() > self.intake_cooldown: #cone OUTAKE
+            self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.75)
             self.intake_state = 3
-        elif stator_current > 140:
+        elif stator_current > 100: #CONE stator current value
             self.intake_state = 4
         elif BButton: #cube OUTTAKE
             self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.5) 
-        elif XButton: #cone OUTTAKE
-            self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.75)
+        elif YButton: #cone OUTTAKE
+            self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.75)
         elif self.intake_state == 0:
             self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0) 
         else: 
@@ -814,14 +814,14 @@ class Myrobot(wpilib.TimedRobot):
             pass
         if self.intake_state == 3:
             # Check if Y button released
-            if not YButton:
+            if not XButton:
                 self.intake_state = 0
             # Get current stator
         if self.intake_state == 4:
             print("Intake shutdown")
             self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
             self.intake_state = 0
-            self.intake_cooldown = time.time() + 1.0   
+            self.intake_cooldown = time.time() + 2.0   
 
     def teleopExit(self):
 
