@@ -80,26 +80,42 @@ class SwerveModule:                                                             
         self.turningMotor.config_kD(self.kSlotIdx, 0)              #This senses how MUCH the error is off, and helps correct based on how much the error is
 
 
+        
+        # absolutePos = self.absEnc.getAbsolutePosition()
+        # print(absolutePos) # Print the value as a diagnostic.
 
-        absolutePos = self.absEnc.getAbsolutePosition()
-        print(absolutePos) # Print the value as a diagnostic.
-
-        # initPos = self.DegToTurnCount(absolutePos) #COMMENTED OUT MONDAY AFTERNOON AFTER SETTING INIT TO ZERO  '''SWAP BACK TUES AM'''
-        # print(initPos)
-        self.turningMotor.setSelectedSensorPosition(0)                                                  #'''SWAP BACK TUES AM'''
-        #print(self.turningMotor.setSelectedSensorPosition(initPos))   
+        # # initPos = self.DegToTurnCount(absolutePos) #COMMENTED OUT MONDAY AFTERNOON AFTER SETTING INIT TO ZERO  '''SWAP BACK TUES AM'''
+        # # print(initPos)
+        # self.turningMotor.setSelectedSensorPosition(0)                                                  #'''SWAP BACK TUES AM'''
+        # #print(self.turningMotor.setSelectedSensorPosition(initPos))   
         
         tempPos = self.turningMotor.getSelectedSensorPosition()                                          #SWAP BACK TUES AM'''
-        print(tempPos)
+        # print(tempPos)
 
         print(self.TurnCountToDeg(tempPos))
-
-
+        
         self.MODULE_MAX_ANGULAR_VELOCITY = math.pi # 1/2 rotation per second. Note this must == SwerveDriveTrain.MAX_ANGULAR_SPEED
         # Does this constant mean we're using radians?                              #A: 2/3/2023- YES!!  Let's do it!!!
         self.MODULE_MAX_ANGULAR_ACCELERATION = 2 * math.pi
 
         self.MAX_SPEED = 3     #6380 rpm * (4in * 0.0254 * 3.14) / 6.75 / 60 = 5.02 METERS PER SECOND unweighted
+        
+        # Get CANCoder position
+        absolutePos = self.absEnc.getAbsolutePosition()
+        print(f'absolute {absoluteEncoderChannel}: {absolutePos:.1f}') # The ":.1f" tells it to print only one digit after the decimal.
+
+        # Try to set the Falcon, either to zero or to the absolute position.
+        initPos = 0                                                 
+        # initPos = self.DegToTurnCount(absolutePos) 
+        err_code = self.turningMotor.setSelectedSensorPosition(initPos)
+        if err_code.value != 0:
+            print(f'Falcon {turningMotorChannel} error setting position: {err_code.value} {err_code.name}.')
+        
+        # Get the value back.
+        tempPos = self.turningMotor.getSelectedSensorPosition()
+        if initPos != tempPos:
+            print(f'Falcon {turningMotorChannel} read back {tempPos}, but we set {initPos}.')
+
 
         
         #   2/3/2023- USE THIS METHOD:ctre.sensors.CANCoder(deviceNumber: int)
