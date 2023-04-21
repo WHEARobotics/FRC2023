@@ -5,6 +5,7 @@ from wpimath.geometry import Translation2d, Rotation2d, Pose2d
 from wpimath.controller import PIDController
 from wpilib import Field2d, SmartDashboard
 import wpilib
+import ctre
 
 import wpimath.kinematics._kinematics
 import wpimath.geometry._geometry
@@ -194,5 +195,6 @@ class SwerveDrivetrain:
         for module in self.swerve_modules:
             module.toggleDriveMotorInverted()
 
-    # def disabledCoast(self):
-    #     self.swerve_modules
+ 
+    
+
