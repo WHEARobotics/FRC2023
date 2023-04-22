@@ -1,3 +1,4 @@
+from __future__ import annotations
 import ctre
 import utilities
 
@@ -11,7 +12,7 @@ def set_arm_position(self,desired_pos):
 '''
 class Manipulator:
 
-    def Arm_Init(self):
+    def __init__(self):
 
         self.ARM_MIN = -63.0
         self.ARM_HORIZONTAL = 0.0
@@ -38,10 +39,6 @@ class Manipulator:
         self.armmotor2.follow(self.armmotor)
         self.armmotor2.setInverted(ctre._ctre.InvertType.OpposeMaster)
 
-
-
-    def Wrist_Init(self):
-
         self.WRIST_START = 30  # 56 degrees from the "tucked in position"
         self.WRIST_MAX = 30 # We're calling the "tucked in position" 0 degrees
         self.WRIST_MIN = -121 # Degrees, wrist dropped in collecting position at the ground level.
@@ -54,7 +51,7 @@ class Manipulator:
 
             #positons for wrist
         self.wristGroudLevel = utilities.wristDegrees_to_counts(self.WRIST_MIN)
-        self.wristInnerPos = utilities.wristDegrees_to_counts(self.WRIST_MAX)
+        self.wristInnerPos = utilities.wristDegrees_to_counts(self.WRIST_START)
 
         self.wrist_Range_Counts = utilities.wristDegrees_to_counts(self.WRIST_MAX - self.WRIST_MIN)
 
