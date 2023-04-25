@@ -173,8 +173,11 @@ class Myrobot(wpilib.TimedRobot):
         modBRCAN = self.swerve.backRight.absEnc.getAbsolutePosition()
         modBLCAN = self.swerve.backLeft.absEnc.getAbsolutePosition()
 
+        motorPos = self.arm.getSelectedSensorPosition()
         wristPos = self.wrist.getSelectedSensorPosition()
+
         Wrist_Angle_Deg = utilities.wristCounts_to_degrees(wristPos)
+        Arm_Angle_Deg = utilities.armCounts_to_degrees(motorPos)
 
         wpilib.SmartDashboard.putString('DB/String 0',"FR: {:4.1f}  {:4.1f}".format(moduleFRState.angle.degrees() % 360, modFRCAN % 360))
         wpilib.SmartDashboard.putString('DB/String 1',"FL: {:4.1f}  {:4.1f}".format(moduleFLState.angle.degrees() % 360, modFLCAN % 360))
@@ -191,6 +194,7 @@ class Myrobot(wpilib.TimedRobot):
 
         # wpilib.SmartDashboard.putString('DB/String 9',"robot angle: {:4.2f}".format(self.swerve.get_heading().degrees() % 360))
         wpilib.SmartDashboard.putString('DB/String 9',"Wrist_Pos_Deg: {:4.2f}".format(Wrist_Angle_Deg))
+        wpilib.SmartDashboard.putString('DB/String 8',"Arm_Pos_Deg: {:4.2f}".format(Arm_Angle_Deg))
 
         if wpilib.SmartDashboard.getBoolean('DB/Button 0', True):
             self.autoPlan = 1
@@ -778,14 +782,13 @@ class Myrobot(wpilib.TimedRobot):
 
         if AButton and self.intake_state == 0 and time.time() > self.intake_cooldown: #cube INTAKE
             self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.4)
-            self.wristDesiredPos = self.Man.WRIST_MID
             self.intake_state = 1 
         elif stator_current > 70: #CUBE stator current value
             self.intake_state = 2
         elif XButton and self.intake_state == 0 and time.time() > self.intake_cooldown: #cone OUTAKE
             self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.75)
             self.intake_state = 3
-        elif stator_current > 100: #CONE stator current value
+        elif stator_current > 40: #CONE stator current value
             self.intake_state = 4
         elif BButton: #cube OUTTAKE
             self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.5) 
@@ -793,17 +796,23 @@ class Myrobot(wpilib.TimedRobot):
             self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.75)
         elif self.intake_state == 0:
             self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
-        else: 
-            if not (AButton or BButton or XButton or YButton) :
-                self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
-                
-            # elif not AButton:
-            #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
-            #     self.wristDesiredPos = self.Man.WRIST_MAX
-        if AButton:
+        elif AButton:
             self.wrist.set(ctre._ctre.ControlMode.MotionMagic, self.Man.wristGroudLevel)
-        else:
-            self.wrist.set(ctre._ctre.ControlMode.MotionMagic, self.Man.wristInnerPos)
+        elif XButton:
+            if Arm_Angle_Deg < 0:
+                self.wrist.set(ctre._ctre.ControlMode.MotionMagic, self.Man.wristCone)
+                self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.groundCone)
+            elif Arm_Angle_Deg > 0:
+                if XButton: #cone OUTAKE
+                    self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.75)
+        else: 
+            if not (BButton or YButton or AButton or XButton) :
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+                self.wrist.set(ctre._ctre.ControlMode.MotionMagic, self.Man.wristInnerPos)
+                self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.groundLevel)
+                
+
+    
 
         
         # Intake state machine for cubes - based on the stator current that determins the percent output 
