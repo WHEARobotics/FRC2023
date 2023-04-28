@@ -33,6 +33,7 @@ class Myrobot(wpilib.TimedRobot):
         self.wrist = self.Man.wristmotor
         self.arm = self.Man.armmotor
         self.arm2 = self.Man.armmotor2
+        self.stator_Passed = False
         
         #Create a manipulator object and call it "grabber".
         
@@ -695,10 +696,14 @@ class Myrobot(wpilib.TimedRobot):
 
         Wrist_Angle_Deg = utilities.wristCounts_to_degrees(wristPos)
 
+        stator_current = self.claw.getStatorCurrent()
+
  
         # wpilib.SmartDashboard.putString('DB/String 9',"Arm_Pos_Degrees: {:4.2f}".format(self.xboxD.getLeftY()))
         # wpilib.SmartDashboard.putString('DB/String 8',"Time: {:3.2f}".format(self.xboxD.getLeftX()))
         wpilib.SmartDashboard.putString('DB/String 8',"Wrist_Pos_Deg: {:4.2f}".format(Wrist_Angle_Deg))
+        
+       
        
         AButton = self.xboxO.getAButton()
         BButton = self.xboxO.getBButton()
@@ -714,56 +719,128 @@ class Myrobot(wpilib.TimedRobot):
         back = self.xboxO.getBackButton()
 
 
+
+        IDLE = 0
+        MID_CUBE = 1
+        MID_CONE = 2
+        CONE_FEEDER = 3
+        ARM_DOWN = 4
+        ORIGINAL_POS = 5
+        WRIST_IN = 6
+        WRIST_OUT = 7
+        HIGH_CUBE = 8
+        CUBE_INTAKE = 9
+        CUBE_OUTTAKE = 10
+        CONE_INTAKE = 11
+        CONE_OUTTAKE = 12
+        INTAKE_IDLE = 13
+
+
+        if self.stator_Passed == True:
+            print ("Stator has passed")
+        else:
+            print ("stator back to false")
+
+
         # ARM / WRIST STATE MACHINE
         #these are the buttons that trigger the states
         if lBumper: #mid cube
-            self.state = 1
+            self.state = MID_CUBE
         elif rBumper: #midcone 
-            self.state = 2
+            self.state = MID_CONE
         elif lTrigger > 0.1: #high cube
-            self.state = 3
+            self.state = CONE_FEEDER
         elif start: #ground level wrist down
-            self.state = 4
+            self.state = ARM_DOWN
         elif back: #ground level wrist in
-            self.state = 5
+            self.state = ORIGINAL_POS
         elif lStickButton: # wrist in
-            self.state = 6
+            self.state = WRIST_IN
         elif rStickButton: # wrist down
-            self.state = 7
+            self.state = WRIST_OUT
         elif rTrigger > 0.1:
-            self.state = 8
+            self.state = HIGH_CUBE
+        elif AButton and self.stator_Passed == False:
+            self.state = CUBE_INTAKE
+        elif BButton:
+            self.state = CUBE_OUTTAKE
+        elif XButton:
+            self.state = CONE_INTAKE
+        elif YButton:
+            self.state = CONE_OUTTAKE
+        
                 
 
         # these are the actions dealing with the states
         
-        if self.state == 0:
-            self.arm.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+        if self.state == IDLE:
             self.wrist.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+            self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+            if not AButton and self.stator_Passed == True:
+                self.stator_Passed = False
+    
+
+
+            # if AButton or stator_current > 40:
+            #     print("IN STATOR CONDITIONAL")
+            #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+            #     if not AButton and stator_Passed == True:
+            #         if stator_current < 40:
+            #             stator_Passed = False
+
+
         else:
-            if self.state == 1:
+            if self.state == MID_CUBE:
                 self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.midCube) #sets the arm motor to desired height
                 self.wristDesiredPos = self.Man.WRIST_MIN
-            elif self.state == 2:
+            elif self.state == MID_CONE:
                 self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.midCone)
                 self.wristDesiredPos = self.Man.WRIST_MIN 
-            elif self.state == 3:
+
+            elif self.state == CONE_FEEDER:
                 self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.highestpoint)
                 self.wristDesiredPos = self.Man.WRIST_MIN 
-            elif self.state == 4:
+
+            elif self.state == ARM_DOWN:
                 self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.groundLevel)
                 self.wristDesiredPos = self.Man.WRIST_MIN 
-            elif self.state == 5:
+
+            elif self.state == ORIGINAL_POS:
                 self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.groundLevel)
                 self.wristDesiredPos = self.Man.WRIST_MAX
-            elif self.state == 6:
+
+            elif self.state == WRIST_IN:
                 self.wristDesiredPos = self.Man.WRIST_MAX
-            elif self.state == 7:
+
+            elif self.state == WRIST_OUT:
                 self.wristDesiredPos = self.Man.WRIST_MIN
-            elif self.state == 8:
+
+            elif self.state == HIGH_CUBE:
                 self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.highCube)
                 self.wristDesiredPos = self.Man.WRIST_MID
+
+            #elif (self.state == CUBE_INTAKE or CUBE_OUTTAKE or CONE_INTAKE or CUBE_OUTTAKE):
+            elif not (AButton or BButton or XButton or YButton):
+                self.state = ORIGINAL_POS
+            elif self.state == CUBE_INTAKE and self.stator_Passed == False:
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.4)
+                if stator_current > 70:
+                    print ("STATOR PASSED")
+                    self.stator_Passed = True
+                    self.state = IDLE
+
+            elif self.state == CUBE_OUTTAKE:
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.5)
+
+            elif self.state == CONE_INTAKE:
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.75)
+
+            elif self.state == CONE_OUTTAKE:
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.75)
             else:
-                self.state = 0
+                self.state = IDLE
+        
+        
 
             #DO NOT set 63 in wrist convertion to Wrist_Min it ruins the positions 
             Wrist_Convertion = self.wristDesiredPos -(63 + Arm_Angle_Deg) #takes the desired position (in or out) and compensates for the angle ofthe arm
@@ -774,79 +851,117 @@ class Myrobot(wpilib.TimedRobot):
             
 
 
+        # CUBE_OUTTAKE = 1
 
-        #CLAW CODE DEALING WITH STATES AND STATOR SPIKES
+        # #CLAW CODE DEALING WITH STATES AND STATOR SPIKES
 
-        #intake state machine that take actions from the controller and trigger the states
-        stator_current = self.claw.getStatorCurrent()
+        # #intake state machine that take actions from the controller and trigger the states
+        # stator_current = self.claw.getStatorCurrent()
 
-        if AButton and self.intake_state == 0 and time.time() > self.intake_cooldown: #cube INTAKE
-            self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.4)
-            self.intake_state = 1 
-        elif stator_current > 70: #CUBE stator current value
-            self.intake_state = 2
-        elif XButton and self.intake_state == 0 and time.time() > self.intake_cooldown: #cone OUTAKE
-            self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.75)
-            self.intake_state = 3
-        elif stator_current > 40: #CONE stator current value
-            self.intake_state = 4
-        elif BButton: #cube OUTTAKE
-            self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.5) 
-        elif YButton: #cone OUTTAKE
-            self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.75)
-        elif self.intake_state == 0:
-            self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
-        elif AButton:
-            self.wrist.set(ctre._ctre.ControlMode.MotionMagic, self.Man.wristGroudLevel)
-        elif XButton:
-            if Arm_Angle_Deg < 0:
-                self.wrist.set(ctre._ctre.ControlMode.MotionMagic, self.Man.wristCone)
-                self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.groundCone)
-            elif Arm_Angle_Deg > 0:
-                if XButton: #cone OUTAKE
-                    self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.75)
-        else: 
-            if not (BButton or YButton or AButton or XButton) :
-                self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
-                self.wrist.set(ctre._ctre.ControlMode.MotionMagic, self.Man.wristInnerPos)
-                self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.groundLevel)
-                
+        # if AButton and self.intake_state == 0 and time.time() > self.intake_cooldown: #cube INTAKE
+        #     self.intake_state = CUBE_OUTTAKE
+        # elif stator_current > 70: #CUBE stator current value
+        #     self.intake_state = 2
+        # elif XButton and self.intake_state == 0 and time.time() > self.intake_cooldown: #cone OUTAKE
+        #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.75)
+        #     self.intake_state = 3
+        # elif stator_current > 40: #CONE stator current value
+        #     self.intake_state = 4
+        # elif BButton: #cube OUTTAKE
+        #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.5) 
+        # elif YButton: #cone OUTTAKE
+        #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.75)
+        # elif self.intake_state == 0:
+        #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+        # elif AButton:
+        #     self.wrist.set(ctre._ctre.ControlMode.MotionMagic, self.Man.wristGroudLevel)
+        # elif XButton:
+        #     if Arm_Angle_Deg < 0:
+        #         self.wrist.set(ctre._ctre.ControlMode.MotionMagic, self.Man.wristCone)
+        #         self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.groundCone)
+        #     elif Arm_Angle_Deg > 0:
+        #         if XButton: #cone OUTAKE
+        #             self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.75)
+        # else: 
+        #     if not (BButton or YButton or AButton or XButton) :
+        #         self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+        #         self.wrist.set(ctre._ctre.ControlMode.MotionMagic, self.Man.wristInnerPos)
+        #         self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.groundLevel)
 
-    
+
+        #     # Big if..elif..else that looks at each possible state and handles state transitions between them.
+        # if self.intake_state == IDLE:
+        #     # Logic to check inputs and change to new states.  Notice no self.claw.set() here.
+        #     if AButton:
+        #         self.intake_state = CUBE_INTAKE
+        #     elif BButton:
+        #         self.intake_state = CUBE_OUTTAKE
+        #     ...
+        # elif self.intake_state == CUBE_INTAKE:
+        #     if not AButton and stator_current > 70:
+        #         self.intake_state = COOLING_OFF         # A special cooling off state to let the driver release the button.
+        #         self.intake_cooldown = time.time() + 1.0 # Capture time for the cooling off interval.
+        # elif self.intake_state == COOLING_OFF:
+        #     if time.time() > self.intake_cooldown:
+        #         self.intake_state = IDLE
+        
+        # # code to handle cube outake and cone
+        # else:
+        #     # In case there is a syntax error and the state gets set to an invalid value, set back to idle.
+        #     self.intake_state = IDLE
+
+        # # Another big if..elif to handle actions based on what state we are in.
+        # # This ensures that self.claw.set() is called exactly once per teleopPeriodic()
+        # # Also note that there are NO state transitions here.
+        # if self.intake_state == IDLE or self.intake_state == COOLING_OFF:
+        #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+        # elif self.intake_state == CUBE_INTAKE:
+        #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.4)
+        # elif self.intake_state == CUBE_OUTTAKE:
+        #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.5)
+        
+        # # other cases
+        
+        # else:
+        #     # A default case just in case the state is set to an invalid value.
+        #     # Note that we could omit the IDLE and COOLDOWN above and just include them in the default
+        #     # because I've decided that the default is zero.  But this way is clearer.
+        #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+        
 
         
         # Intake state machine for cubes - based on the stator current that determins the percent output 
 
-        if self.intake_state == 0:
-            # Claw is idle
-            pass
-        if self.intake_state == 1:
-            # Check if A button released
-            if not AButton:
-                self.intake_state = 0
-            # Get current stator
-            stator_current = self.claw.getStatorCurrent()
-        if self.intake_state == 2:
-            self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
-            self.intake_state = 0
-            self.intake_cooldown = time.time() + 1.0
+        # if self.intake_state == 0:
+        #     # Claw is idle
+        #     pass
+        # if self.intake_state == 1: 
+        #     # Check if A button released
+        #     if not AButton:
+        #         self.intake_state = 0
+        #     # Get current stator
+        #     stator_current = self.claw.getStatorCurrent()
+        # if self.intake_state == 2:
+        #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+        #     self.intake_state = 0
+        #     self.intake_cooldown = time.time() + 1.0
         
 
-        # Cone intake state machine
+        # # Cone intake state machine
 
-        if self.intake_state == 0:
-            # Claw is idle
-            pass
-        if self.intake_state == 3:
-            # Check if Y button released
-            if not XButton:
-                self.intake_state = 0
-            # Get current stator
-        if self.intake_state == 4:
-            print("Intake shutdown")
-            self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
-            self.intake_state = 0
-            self.intake_cooldown = time.time() + 2.0   
+        # if self.intake_state == 0:
+        #     # Claw is idle
+        #     pass
+        # if self.intake_state == 3:
+        #     # Check if Y button released
+        #     if not XButton:
+        #         self.intake_state = 0
+        #     # Get current stator
+        # if self.intake_state == 4:
+        #     print("Intake shutdown")
+        #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+        #     self.intake_state = 0
+        #     self.intake_cooldown = time.time() + 2.0   
 
     def teleopExit(self):
 
