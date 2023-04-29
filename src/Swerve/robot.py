@@ -332,8 +332,8 @@ class Myrobot(wpilib.TimedRobot):
         self.AUTO_METER = -1.0
 
         self.UPPER_POSITION = utilities.armDegrees_to_counts(11)  
-        self.ARM_UPPER_THRESHOLD = self.highCube
-        self.ARM_GROUND_POSITION = self.groundLevel
+        self.ARM_UPPER_THRESHOLD = self.Man.highCube
+        self.ARM_GROUND_POSITION = self.Man.groundLevel
         # ARM_LOWER_THRESHOLD = self.groundLevel
 
 
@@ -342,7 +342,7 @@ class Myrobot(wpilib.TimedRobot):
         #move to 11 degrees but because its not exact it will always be under that amount
         # so the threshold is set to 10 to stop it. 
         self.WRIST_OUT_POSITION = -89
-        self.WRIST_OUT_THRESHOLD = self.WRIST_MID
+        self.WRIST_OUT_THRESHOLD = self.Man.WRIST_MID
         
         
 
@@ -405,8 +405,8 @@ class Myrobot(wpilib.TimedRobot):
         elif self.autoState == self.AUTOSTATE_DRIVE_BACK:
             print("autostate = AUTOSTATE_DRIVE_BACK")
             self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
-            self.wristDesiredPos2 = self.WRIST_MAX  
-            armDesiredPosition = self.groundLevel
+            self.wristDesiredPos2 = self.Man.WRIST_MAX  
+            armDesiredPosition = self.Man.groundLevel
             xSpeed = -0.5
             ySpeed = 0
             rot = 0
@@ -420,8 +420,8 @@ class Myrobot(wpilib.TimedRobot):
             print("autostate = AUTOSTATE_PARK_WRIST_AND_ARM")
             xSpeed = 0
             rot = 0
-            self.wristDesiredPos2 = self.WRIST_MAX
-            armDesiredPosition = self.groundLevel
+            self.wristDesiredPos2 = self.Man.WRIST_MAX
+            armDesiredPosition = self.Man.groundLevel
             if self.autoPlan == self.AUTO_SCORING_LEFT:
                 ySpeed = -0.5
                 if self.autopos.Y() <= -1.0:
@@ -431,16 +431,16 @@ class Myrobot(wpilib.TimedRobot):
                 if self.autopos.Y() >= 1.0:
                     self.autoState = self.AUTOSTATE_ESCAPE_COMMUNITY
         elif self.autoState == self.AUTOSTATE_ESCAPE_COMMUNITY:
-            self.wristDesiredPos2 = self.WRIST_MAX  
-            armDesiredPosition = self.groundLevel
+            self.wristDesiredPos2 = self.Man.WRIST_MAX  
+            armDesiredPosition = self.Man.groundLevel
             xSpeed = -0.5
             ySpeed = 0
             rot = 0
             if self.autopos.X() <= -5.0:
                 self.autoState = self.AUTO_STOPPING
         else: #including auto stopping
-            self.wristDesiredPos2 = self.WRIST_MAX  
-            armDesiredPosition = self.groundLevel
+            self.wristDesiredPos2 = self.Man.WRIST_MAX  
+            armDesiredPosition = self.Man.groundLevel
             xSpeed = 0
             ySpeed = 0
             rot = 0
@@ -717,6 +717,8 @@ class Myrobot(wpilib.TimedRobot):
         lStickButton = self.xboxO.getLeftStickButton()
         rStickButton = self.xboxO.getRightStickButton()
         back = self.xboxO.getBackButton()
+        driver_AButton = self.xboxD.getAButton()
+        driver_BButton = self.xboxD.getBButton
 
 
 
@@ -733,13 +735,16 @@ class Myrobot(wpilib.TimedRobot):
         CUBE_OUTTAKE = 10
         CONE_INTAKE = 11
         CONE_OUTTAKE = 12
-        INTAKE_IDLE = 13
+        ARM_DOWN_WRIST_IN = 13
+        SHOOTING = 14
 
 
         if self.stator_Passed == True:
             print ("Stator has passed")
-        else:
+        if self.stator_Passed == False:
             print ("stator back to false")
+        else:
+            print ("Stator is not true or false")
 
 
         # ARM / WRIST STATE MACHINE
@@ -753,7 +758,7 @@ class Myrobot(wpilib.TimedRobot):
         elif start: #ground level wrist down
             self.state = ARM_DOWN
         elif back: #ground level wrist in
-            self.state = ORIGINAL_POS
+            self.state = ARM_DOWN_WRIST_IN
         elif lStickButton: # wrist in
             self.state = WRIST_IN
         elif rStickButton: # wrist down
@@ -764,10 +769,12 @@ class Myrobot(wpilib.TimedRobot):
             self.state = CUBE_INTAKE
         elif BButton:
             self.state = CUBE_OUTTAKE
-        elif XButton:
+        elif XButton and self.stator_Passed == False:
             self.state = CONE_INTAKE
         elif YButton:
             self.state = CONE_OUTTAKE
+        elif driver_AButton:
+            self.state = SHOOTING
         
                 
 
@@ -775,75 +782,107 @@ class Myrobot(wpilib.TimedRobot):
         
         if self.state == IDLE:
             self.wrist.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
-            self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
-            if not AButton and self.stator_Passed == True:
-                self.stator_Passed = False
-    
-
-
-            # if AButton or stator_current > 40:
-            #     print("IN STATOR CONDITIONAL")
-            #     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
-            #     if not AButton and stator_Passed == True:
-            #         if stator_current < 40:
-            #             stator_Passed = False
-
-
+            
         else:
             if self.state == MID_CUBE:
                 self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.midCube) #sets the arm motor to desired height
-                self.wristDesiredPos = self.Man.WRIST_MIN
+                self.Man.wristDesiredPos = self.Man.WRIST_MIN
             elif self.state == MID_CONE:
                 self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.midCone)
-                self.wristDesiredPos = self.Man.WRIST_MIN 
+                self.Man.wristDesiredPos = self.Man.WRIST_MIN 
 
             elif self.state == CONE_FEEDER:
                 self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.highestpoint)
-                self.wristDesiredPos = self.Man.WRIST_MIN 
+                self.Man.wristDesiredPos = self.Man.WRIST_MIN 
+                # self.Man.wristDesiredPos = self.Man.WRIST_SHOOTING              this is used to test cone shooting ability dont delete
+                # self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.highestpoint)
 
             elif self.state == ARM_DOWN:
                 self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.groundLevel)
-                self.wristDesiredPos = self.Man.WRIST_MIN 
+                self.Man.wristDesiredPos = self.Man.WRIST_MIN 
 
             elif self.state == ORIGINAL_POS:
-                self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.groundLevel)
-                self.wristDesiredPos = self.Man.WRIST_MAX
+                if Arm_Angle_Deg < 0:
+                    self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.groundLevel)
+                    self.Man.wristDesiredPos = self.Man.WRIST_MAX
+                    self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+
+                    if not (AButton or XButton) and self.stator_Passed == True:
+                        self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+                        self.stator_Passed = False
+
+                elif Arm_Angle_Deg > 0:
+                    self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+
+                    if not (AButton or XButton) and self.stator_Passed == True:
+                        self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+                        self.stator_Passed = False
+
+            elif self.state == ARM_DOWN_WRIST_IN:
+                    self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.groundLevel)
+                    self.Man.wristDesiredPos = self.Man.WRIST_MAX
+
 
             elif self.state == WRIST_IN:
-                self.wristDesiredPos = self.Man.WRIST_MAX
+                self.Man.wristDesiredPos = self.Man.WRIST_MAX
 
             elif self.state == WRIST_OUT:
-                self.wristDesiredPos = self.Man.WRIST_MIN
+                self.Man.wristDesiredPos = self.Man.WRIST_MIN
 
             elif self.state == HIGH_CUBE:
                 self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.highCube)
-                self.wristDesiredPos = self.Man.WRIST_MID
+                self.Man.wristDesiredPos = self.Man.WRIST_MID
 
             #elif (self.state == CUBE_INTAKE or CUBE_OUTTAKE or CONE_INTAKE or CUBE_OUTTAKE):
-            elif not (AButton or BButton or XButton or YButton):
+            elif not (AButton or BButton or XButton or YButton) and Arm_Angle_Deg < 0:
                 self.state = ORIGINAL_POS
-            elif self.state == CUBE_INTAKE and self.stator_Passed == False:
+            elif not (AButton or BButton or XButton or YButton) and Arm_Angle_Deg > 0:
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+
+            elif self.state == CUBE_INTAKE and Arm_Angle_Deg < 0:
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.4)
+                self.Man.wristDesiredPos = self.Man.WRIST_MIN
+                if stator_current > 70:
+                    print ("STATOR PASSED CUBE")
+                    self.stator_Passed = True
+                    self.state = ORIGINAL_POS
+            elif self.state == CUBE_INTAKE and Arm_Angle_Deg > 0:
                 self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.4)
                 if stator_current > 70:
-                    print ("STATOR PASSED")
+                    print ("STATOR PASSED CUBE")
                     self.stator_Passed = True
-                    self.state = IDLE
+                    self.state = ORIGINAL_POS
 
             elif self.state == CUBE_OUTTAKE:
                 self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.5)
 
-            elif self.state == CONE_INTAKE:
+            elif self.state == CONE_INTAKE and Arm_Angle_Deg < 0:
                 self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.75)
+                self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.groundCone)
+                self.Man.wristDesiredPos = self.Man.WRIST_MIN
+                if stator_current > 40:
+                    print ("STATOR PASSED CONE")
+                    self.stator_Passed = True
+                    self.state = ORIGINAL_POS
+            elif self.state == CONE_INTAKE and Arm_Angle_Deg > 0:
+                self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.75)
+                if stator_current > 40:
+                    print ("STATOR PASSED CONE")
+                    self.stator_Passed = True
+                    self.state = ORIGINAL_POS
 
             elif self.state == CONE_OUTTAKE:
                 self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.75)
+
+            elif self.state == SHOOTING:
+                pass
             else:
                 self.state = IDLE
-        
+
         
 
             #DO NOT set 63 in wrist convertion to Wrist_Min it ruins the positions 
-            Wrist_Convertion = self.wristDesiredPos -(63 + Arm_Angle_Deg) #takes the desired position (in or out) and compensates for the angle ofthe arm
+            Wrist_Convertion = self.Man.wristDesiredPos -(63 + Arm_Angle_Deg) #takes the desired position (in or out) and compensates for the angle ofthe arm
             self.wrist.set(ctre._ctre.ControlMode.MotionMagic, utilities.wristDegrees_to_counts(Wrist_Convertion))
             #each time the code moves through the "else" states, it moves the arm to the desired position within that state, then passes the value of the wrist's desired position 
             # to the function "self.wrist.set()" at the end.  Thus, unlike the arm being set in each state, the wrist's VALUE is set in each state, and that value
@@ -1023,7 +1062,7 @@ class Myrobot(wpilib.TimedRobot):
             joystick_x = utilities.joystickscaling(self.joystick_x / 2)
             ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
 
-            rot = utilities.joystickscaling(rot / 2)
+            rot = utilities.joystickscaling(rot)
             rot = self.rotLimiter.calculate(rot) * SwerveDrivetrain.MAX_ANGULAR_SPEED
 
             self.swerve.drive(xSpeed, ySpeed, rot, fieldRelativeParam)
