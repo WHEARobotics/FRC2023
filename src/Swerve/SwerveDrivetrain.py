@@ -22,10 +22,10 @@ class SwerveDrivetrain:
     MAX_SPEED = 3.0
     MAX_ANGULAR_SPEED = math.pi # 1/2 rotation per second
 
-    ABSOLUTEPOS_3 = 32.959   # Back Right
-    ABSOLUTEPOS_4 = -249.433 #-278.788 #106.424  # Front Right
-    ABSOLUTEPOS_2 = 206.455  # Back Left
-    ABSOLUTEPOS_1 = 296.543  # Front Left
+    ABSOLUTEPOS_3 = 326.1   # Back Right
+    ABSOLUTEPOS_4 = 253.2 #-278.788 #106.424  # Front Right
+    ABSOLUTEPOS_2 = 152.9  # Back Left
+    ABSOLUTEPOS_1 = 326.1  # Front Left
     
     def __init__(self):
 
@@ -60,7 +60,7 @@ class SwerveDrivetrain:
         
         self.swerve_modules = [ self.frontLeft, self.frontRight, self.backLeft, self.backRight ]
 
-
+        
 
 
         self.swerveModuleStates = [SwerveModuleState(), SwerveModuleState(), SwerveModuleState(), SwerveModuleState()]

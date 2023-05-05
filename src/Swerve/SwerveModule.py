@@ -48,7 +48,7 @@ class SwerveModule:                                                             
         self.turningMotor = TalonFX(turningMotorChannel)
         self.absEnc = ctre.sensors.CANCoder(absoluteEncoderChannel)
 
-        #self.absEnc.configMagnetOffset(absEncOffset)#we used cancoder configuration class when we were supposed to just use cancoder class remember that mistake
+        #self.absEnc.configMagnetOffset(absEncOffset)#we used cancoder configuration class when we were supposed to just use cancoder class remember that mistake   DO NOT UNCOMMENT!!!!!!!!!
 
         self.driveMotor.setInverted(False) #set inverted to true
         self.turningMotor.setInverted(True)
@@ -80,13 +80,13 @@ class SwerveModule:                                                             
         self.turningMotor.config_kD(self.kSlotIdx, 0)              #This senses how MUCH the error is off, and helps correct based on how much the error is
 
 
-        
-        # absolutePos = self.absEnc.getAbsolutePosition()
+         
+        absolutePos = self.absEnc.getAbsolutePosition()
         # print(absolutePos) # Print the value as a diagnostic.
 
-        # # initPos = self.DegToTurnCount(absolutePos) #COMMENTED OUT MONDAY AFTERNOON AFTER SETTING INIT TO ZERO  '''SWAP BACK TUES AM'''
+        self.initPos = self.DegToTurnCount(absolutePos) #COMMENTED OUT MONDAY AFTERNOON AFTER SETTING INIT TO ZERO  '''SWAP BACK TUES AM'''
         # # print(initPos)
-        # self.turningMotor.setSelectedSensorPosition(0)                                                  #'''SWAP BACK TUES AM'''
+        self.turningMotor.setSelectedSensorPosition(self.initPos)                                                  #'''SWAP BACK TUES AM'''
         # #print(self.turningMotor.setSelectedSensorPosition(initPos))   
         
         tempPos = self.turningMotor.getSelectedSensorPosition()                                          #SWAP BACK TUES AM'''
@@ -105,16 +105,26 @@ class SwerveModule:                                                             
         print(f'absolute {absoluteEncoderChannel}: {absolutePos:.1f}') # The ":.1f" tells it to print only one digit after the decimal.
 
         # Try to set the Falcon, either to zero or to the absolute position.
-        initPos = 0                                                 
-        # initPos = self.DegToTurnCount(absolutePos) 
-        err_code = self.turningMotor.setSelectedSensorPosition(initPos)
-        if err_code.value != 0:
-            print(f'Falcon {turningMotorChannel} error setting position: {err_code.value} {err_code.name}.')
+        # initPos = 0                                                 
+        # initPos = self.DegToTurnCount(absolutePos)
+
+
+        count = 0
+        while count < 10:
+            err_code = self.turningMotor.setSelectedSensorPosition(self.initPos)
+            if err_code.value != 0:
+                print(f'Falcon {turningMotorChannel} error setting position: {err_code.value} {err_code.name}.')
+            # Get the value back.
+            tempPos = self.turningMotor.getSelectedSensorPosition()
+            if abs(self.initPos - tempPos) > self.DegToTurnCount(1):
+                print(f'Attempt {count} Falcon {turningMotorChannel} read back {self.TurnCountToDeg(tempPos)}, but we set {absolutePos}.')
+            else:
+                print (f"Falcon {turningMotorChannel} is close enough {self.TurnCountToDeg(self.initPos)}, {self.TurnCountToDeg(tempPos)}")
+                print (f"Init position: {self.TurnCountToDeg(self.initPos)} and the absolute position: {()}")
+                break #  if it is close enough move on.
+            count += 1
+            time.sleep(0.1)
         
-        # Get the value back.
-        tempPos = self.turningMotor.getSelectedSensorPosition()
-        if initPos != tempPos:
-            print(f'Falcon {turningMotorChannel} read back {tempPos}, but we set {initPos}.')
 
 
         

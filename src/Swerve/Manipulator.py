@@ -27,12 +27,13 @@ class Manipulator:
 
         #these are all the positions that will be used for the arm
         self.groundLevel = utilities.armDegrees_to_counts(-63) 
-        self.feederStation = utilities.armDegrees_to_counts(17) 
+        self.highestpoint = utilities.armDegrees_to_counts(40) 
         self.midCube = utilities.armDegrees_to_counts(2) 
         self.midCone = utilities.armDegrees_to_counts(7)
         self.highCube = utilities.armDegrees_to_counts(10)
-        self.highestpoint = utilities.armDegrees_to_counts(24)
-        self.groundCone = utilities.armDegrees_to_counts(-52)
+        self.feederstation = utilities.armDegrees_to_counts(26)
+        self.groundCone = utilities.armDegrees_to_counts(-51)
+        self.shootingCone = utilities.armDegrees_to_counts(26)
 
         self.arm_Range_Counts = utilities.armDegrees_to_counts(self.ARM_MAX - self.ARM_MIN)
 
@@ -43,7 +44,7 @@ class Manipulator:
         self.WRIST_START = 30  # 56 degrees from the "tucked in position"
         self.WRIST_MAX = 30 # We're calling the "tucked in position" 0 degrees
         self.WRIST_MIN = -121 # Degrees, wrist dropped in collecting position at the ground level.
-        self.WRIST_SHOOTING = -50
+        self.WRIST_SHOOTING = -80
 
         self.WRIST_MID = -90
         self.wristDesiredPos = 15

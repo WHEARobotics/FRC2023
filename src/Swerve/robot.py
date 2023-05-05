@@ -48,7 +48,9 @@ class Myrobot(wpilib.TimedRobot):
 
         self.DO_NOTHING = 'do nothing'
 
-        wpilib.SmartDashboard.putStringArray('Auto List', [self.AUTO_SCORING_LEFT, self.AUTO_SCORING_RIGHT, self.AUTO_DOCKING, self.AUTO_SCORE_LOW, self.DO_NOTHING])
+        self.CONE_SCORING = 'high cone'
+
+        wpilib.SmartDashboard.putStringArray('Auto List', [self.AUTO_SCORING_LEFT, self.AUTO_SCORING_RIGHT, self.AUTO_DOCKING, self.AUTO_SCORE_LOW, self.DO_NOTHING, self.CONE_SCORING])
 
 
         self.wiggleTimer = wpilib.Timer()
@@ -272,6 +274,7 @@ class Myrobot(wpilib.TimedRobot):
         self.motorPos2 = self.arm.getSelectedSensorPosition()
         self.Arm_Angle_Deg2 = utilities.armCounts_to_degrees(self.motorPos2)
         self.autopos = self.swerve.get_pose()
+        self.wristPos = self.wrist.getSelectedSensorPosition()
         
         # meters = self.swerve.frontRight.driveCountToMeters(self.swerve.frontRight.driveMotor.getSelectedSensorPosition)
         # meters = SwerveModule.driveCountToMeters(self.swerve.backLeft.driveMotor.getSelectedSensorPosition)
@@ -288,6 +291,8 @@ class Myrobot(wpilib.TimedRobot):
             self.autoDoNothing()
         elif self.autoPlan == self.AUTO_SCORE_LOW:
             self.autoScoreLow()
+        elif self.autoPlan == self.CONE_SCORING:
+            self.autoConeScoreHigh()
         else:
             pass
 
@@ -453,6 +458,72 @@ class Myrobot(wpilib.TimedRobot):
         self.arm.set(ctre._ctre.ControlMode.MotionMagic, armDesiredPosition)
 
         self.swerve.drive(xSpeed, ySpeed, rot, self.fieldRelative)
+
+
+
+    def autoScoreHigh(self):
+    # Enumerate our new auto states
+        wristDesiredPos = 15
+        AUTOSTATE_LIFTARM = 0 
+        AUTOSTATE_POSITION_WRIST = 1
+        AUTOSTATE_OUTTAKE = 2
+        AUTOSTATE_DRIVE_BACK = 3
+        AUTOSTATE_DRIVE_SIDEWAYS = 4
+        AUTOSTATE_ESCAPE_COMMUNITY = 5
+        AUTO_STOPPING = 6
+        AUTO_METER = -1.0
+
+        self.UPPER_POSITION = self.Man.shootingCone + 1
+        self.ARM_UPPER_THRESHOLD = self.Man.shootingCone
+        self.ARM_GROUND_POSITION = self.Man.groundLevel
+        # ARM_LOWER_THRESHOLD = self.groundLevel
+
+        #high cube is set to 10 and highest position is set to 11 and we set the motor to 
+        #move to 11 degrees but because its not exact it will always be under that amount
+        # so the threshold is set to 10 to stop it. 
+        self.WRIST_OUT_POSITION = -79
+        self.WRIST_OUT_THRESHOLD = self.Man.WRIST_SHOOTING
+
+        if self.autoState == AUTOSTATE_LIFTARM:
+            print("autostate = AUTOSTATE_LIFTARM")
+            self.wristDesiredPos2 = 15
+            xSpeed = 0
+            ySpeed = 0
+            rot = 0
+            #if abs(motorPos2 - ARM_THRESHOLD) > AUTO_DEADBAND_IN_DEGREES:
+            print(f"{self.motorPos2}-{self.ARM_UPPER_THRESHOLD} = {self.motorPos2 - self.ARM_UPPER_THRESHOLD}")
+            if self.motorPos2 <= self.ARM_UPPER_THRESHOLD:
+                armDesiredPosition = self.UPPER_POSITION
+            else:
+                armDesiredPosition = self.ARM_UPPER_THRESHOLD
+                self.autoState = self.AUTOSTATE_POSITION_WRIST
+            
+        elif self.autoState == self.AUTOSTATE_POSITION_WRIST:
+            print(abs(self.motorPos2 - self.ARM_UPPER_THRESHOLD))
+            print("autostate = 1")
+            xSpeed = 0
+            ySpeed = 0
+            rot = 0
+            if self.wristPos <= self.ARM_UPPER_THRESHOLD:
+                wristDesiredPos = self.WRIST_OUT_POSITION
+            else:
+                wristDesiredPos = self.WRIST_OUT_THRESHOLD
+                self.autoState = self.AUTO_STOPPING
+        elif self.state == AUTO_STOPPING:
+            wristDesiredPos = self.Man.WRIST_MAX
+            armDesiredPosition = self.Man.groundLevel
+            xSpeed = 0
+            ySpeed = 0
+            rot = 0
+
+
+        Wrist_Convertion = wristDesiredPos -(63 + self.Arm_Angle_Deg2) #takes the desired position (in or out) and compensates for the angle ofthe arm
+        self.wrist.set(ctre._ctre.ControlMode.MotionMagic, utilities.wristDegrees_to_counts(Wrist_Convertion))
+        self.arm.set(ctre._ctre.ControlMode.MotionMagic, armDesiredPosition)
+
+        self.swerve.drive(xSpeed, ySpeed, rot, self.fieldRelative)
+        
+        
 
 
 
@@ -683,6 +754,8 @@ class Myrobot(wpilib.TimedRobot):
         #wpilib.SmartDashboard.putString('DB/String 4',"Mod4TurnEnc: {:4.2f}".format(self.mod4turnEnc % 360))
         
 
+        wpilib.SmartDashboard.putString('DB/String 6',"State:  ".format(self.state))
+
 
         # EVERYTHING BELOW IS TAKEN FROM WIGGLETON ROBOT.PY
 
@@ -739,13 +812,6 @@ class Myrobot(wpilib.TimedRobot):
         SHOOTING = 14
 
 
-        if self.stator_Passed == True:
-            print ("Stator has passed")
-        if self.stator_Passed == False:
-            print ("stator back to false")
-        else:
-            print ("Stator is not true or false")
-
 
         # ARM / WRIST STATE MACHINE
         #these are the buttons that trigger the states
@@ -756,7 +822,7 @@ class Myrobot(wpilib.TimedRobot):
         elif lTrigger > 0.1: #high cube
             self.state = CONE_FEEDER
         elif start: #ground level wrist down
-            self.state = ARM_DOWN
+            self.state = SHOOTING
         elif back: #ground level wrist in
             self.state = ARM_DOWN_WRIST_IN
         elif lStickButton: # wrist in
@@ -773,8 +839,6 @@ class Myrobot(wpilib.TimedRobot):
             self.state = CONE_INTAKE
         elif YButton:
             self.state = CONE_OUTTAKE
-        elif driver_AButton:
-            self.state = SHOOTING
         
                 
 
@@ -785,24 +849,32 @@ class Myrobot(wpilib.TimedRobot):
             
         else:
             if self.state == MID_CUBE:
+
                 self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.midCube) #sets the arm motor to desired height
                 self.Man.wristDesiredPos = self.Man.WRIST_MIN
+
+            elif self.state == SHOOTING:
+                self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.shootingCone)
+                self.Man.wristDesiredPos = self.Man.WRIST_SHOOTING 
+
             elif self.state == MID_CONE:
+
                 self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.midCone)
                 self.Man.wristDesiredPos = self.Man.WRIST_MIN 
 
             elif self.state == CONE_FEEDER:
-                self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.highestpoint)
+                self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.feederstation)
                 self.Man.wristDesiredPos = self.Man.WRIST_MIN 
-                # self.Man.wristDesiredPos = self.Man.WRIST_SHOOTING              this is used to test cone shooting ability dont delete
-                # self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.highestpoint)
+                
 
             elif self.state == ARM_DOWN:
+
                 self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.groundLevel)
                 self.Man.wristDesiredPos = self.Man.WRIST_MIN 
 
             elif self.state == ORIGINAL_POS:
                 if Arm_Angle_Deg < 0:
+              
                     self.arm.set(ctre._ctre.ControlMode.MotionMagic, self.Man.groundLevel)
                     self.Man.wristDesiredPos = self.Man.WRIST_MAX
                     self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
@@ -874,8 +946,7 @@ class Myrobot(wpilib.TimedRobot):
             elif self.state == CONE_OUTTAKE:
                 self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.75)
 
-            elif self.state == SHOOTING:
-                pass
+
             else:
                 self.state = IDLE
 
@@ -1050,20 +1121,20 @@ class Myrobot(wpilib.TimedRobot):
 
         
 
-        if self.xboxD.getRightTriggerAxis() > 0.1:
+        if self.xboxD.getRightTriggerAxis() > 0.9 and self.xboxD.getAButton():
             self.halfSpeed = True
-        elif self.xboxD.getLeftTriggerAxis() > 0.1:
+        elif self.xboxD.getLeftTriggerAxis() > 0.9 and self.xboxD.getAButton():
             self.halfSpeed = False
 
         if self.halfSpeed == True:
-            joystick_y = utilities.joystickscaling(self.joystick_y / 2)
-            xSpeed = self.xSpeedLimiter.calculate(joystick_y) * SwerveDrivetrain.getMaxSpeed()
+            joystick_y = utilities.joystickscaling(self.joystick_y )
+            xSpeed = self.xSpeedLimiter.calculate(joystick_y) * SwerveDrivetrain.getMaxSpeed() / 6
 
-            joystick_x = utilities.joystickscaling(self.joystick_x / 2)
-            ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED
+            joystick_x = utilities.joystickscaling(self.joystick_x )
+            ySpeed = self.ySpeedLimiter.calculate(joystick_x) * SwerveDrivetrain.MAX_SPEED / 6
 
             rot = utilities.joystickscaling(rot)
-            rot = self.rotLimiter.calculate(rot) * SwerveDrivetrain.MAX_ANGULAR_SPEED
+            rot = self.rotLimiter.calculate(rot) * SwerveDrivetrain.MAX_ANGULAR_SPEED / 3
 
             self.swerve.drive(xSpeed, ySpeed, rot, fieldRelativeParam)
 
