@@ -46,6 +46,7 @@ class SwerveModule:                                                             
 
         self.driveMotor = TalonFX(driveMotorChannel)                 #"Channel" is ID on CAN bus
         self.turningMotor = TalonFX(turningMotorChannel)
+        time.sleep(1)
         self.absEnc = ctre.sensors.CANCoder(absoluteEncoderChannel)
 
         #self.absEnc.configMagnetOffset(absEncOffset)#we used cancoder configuration class when we were supposed to just use cancoder class remember that mistake   DO NOT UNCOMMENT!!!!!!!!!
@@ -86,7 +87,8 @@ class SwerveModule:                                                             
 
         self.initPos = self.DegToTurnCount(absolutePos) #COMMENTED OUT MONDAY AFTERNOON AFTER SETTING INIT TO ZERO  '''SWAP BACK TUES AM'''
         # # print(initPos)
-        self.turningMotor.setSelectedSensorPosition(self.initPos)                                                  #'''SWAP BACK TUES AM'''
+
+        # self.turningMotor.setSelectedSensorPosition(self.initPos)                                                  #'''SWAP BACK TUES AM'''
         # #print(self.turningMotor.setSelectedSensorPosition(initPos))   
         
         tempPos = self.turningMotor.getSelectedSensorPosition()                                          #SWAP BACK TUES AM'''
@@ -112,6 +114,7 @@ class SwerveModule:                                                             
         count = 0
         while count < 10:
             err_code = self.turningMotor.setSelectedSensorPosition(self.initPos)
+            time.sleep(1)
             if err_code.value != 0:
                 print(f'Falcon {turningMotorChannel} error setting position: {err_code.value} {err_code.name}.')
             # Get the value back.
@@ -121,9 +124,12 @@ class SwerveModule:                                                             
             else:
                 print (f"Falcon {turningMotorChannel} is close enough {self.TurnCountToDeg(self.initPos)}, {self.TurnCountToDeg(tempPos)}")
                 print (f"Init position: {self.TurnCountToDeg(self.initPos)} and the absolute position: {()}")
-                break #  if it is close enough move on.
+                break
+                    
             count += 1
             time.sleep(0.1)
+
+        
         
 
 
