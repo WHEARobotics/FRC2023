@@ -339,7 +339,7 @@ class Myrobot(wpilib.TimedRobot):
         self.UPPER_POSITION = utilities.armDegrees_to_counts(11)  
         self.ARM_UPPER_THRESHOLD = self.Man.highCube
         self.ARM_GROUND_POSITION = self.Man.groundLevel
-        # ARM_LOWER_THRESHOLD = self.groundLevel
+        # ARM_LOWER_THRESHOLD = self.Man.groundLevel
 
 
 
@@ -609,12 +609,10 @@ class Myrobot(wpilib.TimedRobot):
         AUTO_DRIVE_OUT = 3
         AUTO_STOP = 4
 
-        WRIST_OUT = -122
-        WRIST_OUT_THRESHOLD = self.WRIST_MIN#wrist min is -121
-        WRIST_IN = 31
-        WRIST_IN_THRESHOLD = self.WRIST_MAX#wrist max is 30
-
-        METER_DISTANCE = -5
+        WRIST_OUT_POSITION = self.Man.WRIST_MIN
+        WRIST_OUT_THRESHOLD = self.Man.WRIST_MID
+        WRIST_IN_POSITION = 31
+        WRIST_IN_THRESHOLD = self.Man.WRIST_MAX#wrist max is 30
 
 
 
@@ -624,48 +622,51 @@ class Myrobot(wpilib.TimedRobot):
             xSpeed = 0
             ySpeed = 0
             rot = 0
-            print(f"{wristPosition}-{ARM_THRESHOLD} = {motorPos2 - ARM_THRESHOLD}")
-            if wristPosition <= WRIST_OUT_THRESHOLD:
-                self.wrist.set(ctre._ctre.ControlMode.MotionMagic, WRIST_OUT)
-            else:
-                self.wrist.set(ctre._ctre.ControlMode.MotionMagic, WRIST_OUT_THRESHOLD)
+            self.wristDesiredPos2 = WRIST_OUT_POSITION
+            wristPositionDegrees = utilities.wristCounts_to_degrees(wristPosition)
+            if abs(wristPositionDegrees - self.WRIST_OUT_THRESHOLD) < self.AUTO_DEADBAND_IN_DEGREES or self.wiggleTimer.advanceIfElapsed(3):
                 self.autoState = AUTO_OUTTAKE
-                self.wiggleTimer.reset()
 
         elif self.autoState == AUTO_OUTTAKE:
             xSpeed = 0
             ySpeed = 0
             rot = 0
             self.claw.set(ctre._ctre.ControlMode.PercentOutput, -0.5)
-            if self.wiggleTimer.advancedIfElapsed(1):
+            self.wiggleTimer.reset() 
+            if self.wiggleTimer.advanceIfElapsed(1.0):
                 self.autoState = AUTO_WRIST_IN
         elif self.autoState == AUTO_WRIST_IN:
             self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
             xSpeed = 0
             ySpeed = 0
             rot = 0
-            print(f"{self.wristPosition}-{self.ARM_THRESHOLD} = {motorPos2 - self.ARM_THRESHOLD}")
             if self.wristPosition <= WRIST_IN_THRESHOLD:
-                self.wrist.set(ctre._ctre.ControlMode.MotionMagic, WRIST_IN)
+                self.wristDesiredPos2 = WRIST_IN_POSITION
             else:
                 self.wrist.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
                 self.autoState = AUTO_DRIVE_OUT
         elif self.autoState == AUTO_DRIVE_OUT:
+            self.claw.set(ctre._ctre.ControlMode.PercentOutput, 0.0)  
             xSpeed = -0.5
             ySpeed = 0
             rot = 0
-            if autopos.X() <= METER_DISTANCE:
+            if self.autopos.X() <= self.AUTO_METER:
                 self.autoState = AUTO_STOP
-        elif self.autoState == AUTO_STOP:
+        elif self.autoSate == AUTO_STOP:
+            self.wristDesiredPos2 = self.Man.WRIST_MAX  
             xSpeed = 0
             ySpeed = 0
             rot = 0
+        else:
+            self.wristDesiredPos2 = self.Man.WRIST_MAX  
+            xSpeed = 0
+            ySpeed = 0
+            rot = 0
+        
 
-
-
-
-
-
+        wristPosition = self.wrist.getSelectedSensorPosition()
+        Wrist_Convertion2 = self.wristDesiredPos2 -(63 + self.Arm_Angle_Deg2) #takes the desired position (in or out) and compensates for the angle ofthe arm
+        self.wrist.set(ctre._ctre.ControlMode.MotionMagic, utilities.wristDegrees_to_counts(Wrist_Convertion2))
 
         self.swerve.drive(xSpeed, ySpeed, rot, self.fieldRelative)
 
