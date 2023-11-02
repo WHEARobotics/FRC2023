@@ -2,6 +2,7 @@
 import wpilib
 import wpimath
 import ctre
+import ctre.sensors
 from ctre import TalonFX, ControlMode, DemandType
 from wpimath.controller import PIDController, ProfiledPIDController
 from wpimath.controller import SimpleMotorFeedforwardMeters
