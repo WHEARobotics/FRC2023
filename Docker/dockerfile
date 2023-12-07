@@ -1,0 +1,48 @@
+#FROM bitnami/pytorch:latest
+# Use Ubuntu as base image because Debian doesn't have g++-11, required by robotpy
+#FROM anibali/pytorch:2.0.1-cuda11.8
+FROM ubuntu
+USER root
+
+# Update the system and install basic dev packages
+RUN apt-get update && apt-get install -y binutils gcc g++ make git wget libicu-dev gradle
+RUN apt-get update  && apt-get install -y openjdk-11-jdk vim software-properties-common
+RUN apt-get update && apt-get install -y build-essential libncursesw5-dev libssl-dev 
+RUN apt-get update && apt-get install -y libsqlite3-dev 
+RUN apt-get update && apt-get install -y libgdbm-dev
+RUN apt-get update && apt-get install -y libc6-dev
+RUN apt-get update && apt-get install -y libbz2-dev
+RUN apt-get update && apt-get install -y libffi-dev
+RUN apt-get update && apt-get install -y zlib1g-dev
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Pacific/Honolulu
+RUN apt-get install -y tk-dev && add-apt-repository ppa:deadsnakes/ppa && apt-get update && apt-get install -y python3.11 pip
+
+RUN pip install torch==2.1.0+cpu torchvision==0.16.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+
+# Install additional Python packages
+RUN pip install --upgrade pip && pip install jupyter jupyterlab jupytext matplotlib numpy \
+pandas scipy scikit-learn seaborn sympy opencv-python torchsummary
+
+# Note about OpenCV / opencv-python:
+# This is *not* CUDA-accelerated when installed this way. That's okay for
+# learning purposes, but since I already have CUDA-enabled PyTorch, eventually
+# this file should probably build OpenCV from source with CUDA support.
+
+#FRC
+RUN apt update && apt install -y build-essential g++-11
+RUN pip install robotpy pynetworktables robotpy-ctre 
+
+# Disable auth and allow root in Jupyter (DANGEROUS! Only do this for local development!)
+RUN mkdir //.jupyter && cd //.jupyter && jupyter lab --generate-config && \
+echo "c.PasswordIdentityProvider.hashed_password = " >> jupyter_lab_config.py && \
+echo "c.NotebookApp.allow_root = True" >> jupyter_lab_config.py && \
+echo "c.NotebookApp.token = '' " >> jupyter_lab_config.py && \
+echo "c.PasswordIdentityProvider.password_required= False" >> jupyter_lab_config.py 
+
+# Run Jupyter at 8888. Start image with, e.g., -p 8888:8888
+EXPOSE 8888
+
+#ENTRYPOINT [ "/bin/bash" ]
+# Set listen IP to 0.0.0.0 so that outside Web browsers can connect
+ENTRYPOINT ["jupyter", "lab", "--allow-root", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--NotebookApp.token=''"]

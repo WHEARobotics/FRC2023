@@ -140,3 +140,6 @@ simgui*
 .idea/
 .DS_Store
 networktables.json
+
+# Pytorch weights
+src/machine_learning/data
