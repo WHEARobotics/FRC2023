@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "FRC2023"
+  site-url: "https://WHEARobotics.github.io/FRC2023"
+  description: "Code for the 2023 season"
+  repo-branch: main
+  repo-url: "https://github.com/WHEARobotics/FRC2023"
