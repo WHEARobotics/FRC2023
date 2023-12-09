@@ -191,7 +191,7 @@ optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 # %%time 
 
 # Train the network
-epochs = 2
+epochs = 30
 losses = []
 for epoch in range(epochs):  # loop over the dataset multiple times
     running_loss = 0.0
