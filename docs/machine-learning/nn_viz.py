@@ -21,9 +21,25 @@
 #     name: manta
 # ---
 
-import numpy as np
+# +
+import torch
+from torch.autograd import Variable
+from torch import optim
+import torch.nn as nn
+import torch.optim as optim
+
+import torchvision
+import torchvision.transforms as transforms
+from torchvision import datasets
+from torchvision.transforms import ToTensor
+
+import torchsummary
+
 import matplotlib.pyplot as plt
 from IPython.display import SVG
+import numpy as np
+import time
+# -
 
 # ## Visualizing The 3-Layer XOR Neural Network
 #
@@ -54,6 +70,8 @@ SVG('<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="450" height="3
   <line x1="100" y1="210" x2="170" y2="340" stroke="red" stroke-width="2"/>\
   <line x1="250" y1="210" x2="180" y2="340" stroke="red" stroke-width="2"/>\
 </svg>')
+
+
 # -
 
 # In this figure, the `lin1` lines represent the weights connecting the input nodes (circles) to the nodes where we applied the sigmoid function ($\sigma$), and the `lin2` lines represent the weights connecting the middle layer's outputs to the single node in the output layer.
@@ -267,13 +285,6 @@ SVG('<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="450" height="3
 #
 # The convolutional layers detect the features of the input, but we need to map those into one of 10 output classes (the digits from 0-9). Going through the "shapes" of the input size, the convolutional and pooling layers, the output of the second pooling layer is [32,7,7] meaning that I need 32x7x7 weights for each of the 10 outputs (plus 1 bias weight for each output value). We create a fully-connected, aka Linear, layer: 32 x 7 x 7 x 10 + 10 = 15,690 weights. 
 
-import torch
-import torch.nn as nn
-from torchvision import datasets
-from torchvision.transforms import ToTensor
-import torchsummary
-
-
 # +
 #| echo: true 
 #| code-fold: false
@@ -340,19 +351,9 @@ net = MnistConv()
 torchsummary.summary(net, (1, 28, 28))
 # -
 
-from torch import optim
-
-
-import torch
-import torchvision
-import torchvision.transforms as transforms
-import torch.nn as nn
-import torch.optim as optim
-import matplotlib.pyplot as plt
-import numpy as np
-import time 
-
+# Cross Entropy Loss is correct choice for classification (choosing among options)
 criterion = nn.CrossEntropyLoss()
+# Adam is a refinement of SGD and is generally a good choice
 optimizer = optim.Adam(net.parameters(), lr = 0.01)
 
 transform = transforms.Compose([transforms.ToTensor()])
@@ -365,8 +366,6 @@ batch_size = 64
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True)
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False)
 # -
-
-from torch.autograd import Variable
 
 # This is the _exact same_ training loop as we used on 3-layer MNIST. Not a line of code is different:
 
@@ -420,9 +419,6 @@ def prediction_for_image(net, q_image):
         9 : "Nine"
     }
     return labels_for_ix[index_of_max_val]
-
-#prediction_for_image(net, query_image)
-
 
 # -
 
