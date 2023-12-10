@@ -143,3 +143,4 @@ networktables.json
 
 # Pytorch weights
 src/machine_learning/data
+/docs/machine-learning/data
