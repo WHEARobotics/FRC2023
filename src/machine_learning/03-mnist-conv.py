@@ -72,9 +72,6 @@ import time
 # The convolutional layers detect the features of the input, but we need to map those into one of 10 output classes (the digits from 0-9). Going through the "shapes" of the input size, the convolutional and pooling layers, the output of the second pooling layer is [32,7,7] meaning that I need 32x7x7 weights for each of the 10 outputs (plus 1 bias weight for each output value). We create a fully-connected, aka Linear, layer: 32 x 7 x 7 x 10 + 10 = 15,690 weights. 
 
 # +
-#| echo: true 
-#| code-fold: false
-
 class MnistConv(nn.Module):
     def __init__(self):
         super(MnistConv, self).__init__()
@@ -129,13 +126,7 @@ net = MnistConv()
 #
 # It has fewer than 30,000 weights, that's 1/10th the size of our 3-layer MNIST neural network.
 
-# +
-#| echo: true 
-#| code-fold: false
-
-
 torchsummary.summary(net, (1, 28, 28))
-# -
 
 # Cross Entropy Loss is correct choice for classification (choosing among options)
 criterion = nn.CrossEntropyLoss()
@@ -154,10 +145,6 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle
 # -
 
 # This is the _exact same_ training loop as we used on 3-layer MNIST. Not a line of code is different:
-
-# +
-#| echo: true 
-#| code-fold: false
 
 epochs = 2
 losses = []
@@ -185,8 +172,6 @@ for epoch in range(epochs):  # loop over the dataset multiple times
     running_loss = 0.0
 
 
-# -
-
 def prediction_for_image(net, q_image):
     net.eval()
     outputs = net(q_image.unsqueeze(0))
@@ -211,9 +196,6 @@ def prediction_for_image(net, q_image):
 # You may remember this hard-to-get target:
 
 # +
-#| echo: true
-#| code-fold: false
-
 def show_and_tell(net, dataset, index):
     query_image, ground_truth = dataset[index]
     
@@ -237,10 +219,6 @@ show_and_tell(net, testset, 478)
 
 # ## What's our overall accuracy?
 
-# +
-#| echo: true
-#| code-fold: false
-
 loss = np.array([])
 net.eval()
 for i, data in enumerate(testloader, 0):
@@ -252,7 +230,6 @@ for i, data in enumerate(testloader, 0):
 accuracy = 1.0 - np.mean(loss.flatten())
 print(f"Across {len(testloader) * batch_size} test images, accuracy is {accuracy:.2%}")
 
-# -
 
 # In the case of MNIST, the convolutional neural network performs with essentially the same accuracy as the 3-layer neural network: generally achieving 92-93% accuracy. This is despite having fewer than 10% of the weights, which effectively means using much less memory. On the other hand, this deeper neural network trains a little slower, as convolving (sliding the window) is an inner loop that has to happen (even if we don't have to explicitly write the code). The depth also means that the code has a little less **cache coherence**, which is a factor in performance tuning.
 #
