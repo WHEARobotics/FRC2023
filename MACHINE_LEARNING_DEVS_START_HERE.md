@@ -65,25 +65,25 @@ You'll see something _similar_ to what you saw when you ran the image the first 
 ### Yes: Run the same container over and over with the **Run** icon on the **Containers** tab
 ### No: Create new containers over and over with the **Run** icon on the **Images** tab  
 
-## Build the 9GB machine-learning image 
+## Pull the WHEA Machine Learning and Robotics image
 
 When you can be sure your machine will have at least an hour to work, open a Terminal and switch to this repository's `Docker/` directory. Run:
 
-`docker build . -t whea`
+`docker pull lobrien/whea:frc_cpu`
 
-This will use the **dockerfile** file in the current directory to build an image called **whea**. 
+This retrieves the (big) image I set up from Docker Hub. 
 
 **This will take a long time**
 
 ## Run the whea machine-learning image
 
-When the image is finally built, return to the terminal. Switch to the `src/` directory in this repository and run the image. Replace `{complete path}` below with your complete path to the `src/` directory:
+When the image is downloaded, return to the terminal. Switch to the `src/` directory in this repository and run the image. Replace `{complete path}` below with your complete path to the `src/` directory:
 
-`docker run -it -p 8888:8888 -v {complete path}:/app/src whea`
+`docker run -it -p 8888:8888 -v {complete path}:/app/src frc_cpu`
 
 For instance: 
 
-`docker run -it -p 8888:8888 -v c:\Users\lobri\Documents\src\FRC2023\src:/app/src whea`
+`docker run -it -p 8888:8888 -v c:\Users\lobri\Documents\src\FRC2023\src:/app/src frc_cpu`
 
 ## Did all of that work? 
 
@@ -111,7 +111,7 @@ To complete this *long* process, you:
 
 * Installed **Docker** Desktop
 * Downloaded and ran a "Hello-World" **image**, creating one or more **containers** along the way
-* Built the WHEA Docker image from a **dockerfile**
+* Pulled the WHEA docker image from Docker Hub
 * Ran the Docker image, creating a **container** in which is installed PyTorch, Jupyter, and other things used in ML development
 * Opened a Python file as a Jupytext notebook, which allows you to interactively write, run, and graph Python
 

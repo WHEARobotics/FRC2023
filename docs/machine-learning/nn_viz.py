@@ -257,33 +257,27 @@ SVG('<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="450" height="3
 #
 # Pooling layers are very commonly used with convolutional layers. 
 
-# ## A Deep Convolutional Neural Network for MNIST
+# ## Residual Input Weights
 #
-# I don't have time to go over this step by step, so I'm just going to present the code quickly. 
+# As you go deeper into a neural network, the exact details of the higher layers are no longer available to you. But it may be the case that those details may be a quick way to distinguish between higher-level feature "A" vs. feature "B." 
 #
-# You'll see that, just as we defined a new class for our Xor network and our 3-layer MNIST network, we're doing the same here. 
+# For instance, maybe the exact hue of the feathers is a part of telling the difference between one species of bird and another. But if you have a bunch of layers and your features are mostly focused on whether something is a bird or a fish or a palm tree, it might take you a long training time to end up with a high-level node that focused on that feature. You _would_ very likely get it, but strictly as a practical purpose, it turns out that there's a technical that often shortens deep training:
 #
-# To make the code a little shorter, I define `conv1` and `conv2` as layers that themselves each have a convolutional layer (`Conv2d`), use the `ReLU` activation function, and a pooling layer (`MaxPool2D`). Creating **blocks** like this that internally have layers and which, in turn, you layer with other blocks, is how deep-learning **architectures** are built. 
+# **Just re-inject higher-level inputs into lower-level layers**
 #
-# ### Parameters to `Conv2d`
+# ![](media/residual.svg)
 #
-# When defining a convolutional layer (`Conv2d`) in Pytorch, the depth of the input is the number of `in_channels`. With a black-and-white image, we only have 1 input per pixel. If it were an RGB image with 3 values defining the pixel, the `in_channels` would be 3. 
+# Block diagrams of neural network architectures often will have this, or a variation, to show that they're doing some kind of reinjecting inputs.
 #
-# The `out_channels` is the number of kernels you want. Generally, you want to train a bunch of kernels, since each kernel has a receptive field of only `kernel_size * kernel_size` weights. (And remember that you'll also have 1 bias weight for each output.) 
+# ## Resnet 50
 #
-# Although we talked about 3x3 pixel stuff above, I happen to know that it takes a really long time to train a 3x3 convnet on MNIST. Instead, we use a `kernel_size` (really "length of one side of kernel") of 5. 
+# Here is a published block diagram of ResNet-50, a commonly-used backbone:
 #
-# How much do you slide the window at each step? We set `stride` to 1, meaning that we just move the window 1 pixel over until we hit the end of the row and then go down 1. Setting it to a higher number will miss some of the small-scale patterns in your input, but will make for a smaller feature map. (I'm not sure I've _ever_ seen a production system where `stride` > 1 was used.) 
+# ![](media/resnet50.png)
 #
-# What happens when your window hits the edge? Generally, you use `padding` to just put 0s on "the outside." Since our `kernel_size` is 5, that means that one when the middle pixel is on the edge, there are 2 pixels "outside." Thus, `padding = 2`. 
+# It's not _exactly_ like the diagrams I've presented, because there is no standard **graphical modeling language** for neural networks, but you should see a bunch of familiar things: convolutional layers, with their kernel size and stride; pooling layers (we talked about "max pooling" where the value is the maximum of the inputs. Guess what operator is used in an "average pooling layer."); residual inputs (I would have to read the paper to know why some are dashed lines rather than solid); a fully-connected / linear layer as the "classification head," and finally, an output layer in which the largest value is the class that is most likely to be the input.
 #
-# ### Parameters to `MaxPool2d`
-#
-# If you understood the discussion of pooling layers, this should be pretty clear: our pooling layer has a receptive field of 2x2. It cuts the size of the feature map by 3/4, saving only the activation that has the highest absolute value. 
-#
-# ### Parameters to `Linear`
-#
-# The convolutional layers detect the features of the input, but we need to map those into one of 10 output classes (the digits from 0-9). Going through the "shapes" of the input size, the convolutional and pooling layers, the output of the second pooling layer is [32,7,7] meaning that I need 32x7x7 weights for each of the 10 outputs (plus 1 bias weight for each output value). We create a fully-connected, aka Linear, layer: 32 x 7 x 7 x 10 + 10 = 15,690 weights. 
+# ![](media/resnet_annot.png)
 
 # +
 #| echo: true 
@@ -399,7 +393,8 @@ for epoch in range(epochs):  # loop over the dataset multiple times
     running_loss = 0.0
 
 
-# +
+# -
+
 def prediction_for_image(net, q_image):
     net.eval()
     outputs = net(q_image.unsqueeze(0))
@@ -420,7 +415,6 @@ def prediction_for_image(net, q_image):
     }
     return labels_for_ix[index_of_max_val]
 
-# -
 
 # You may remember this hard-to-get target:
 
@@ -449,25 +443,6 @@ def show_and_tell(net, dataset, index):
 show_and_tell(net, testset, 478)
 # -
 
-# ## What's our overall accuracy?
-
-# +
-#| echo: true
-#| code-fold: false
-
-loss = np.array([])
-net.eval()
-for i, data in enumerate(testloader, 0):
-    # get the inputs; data is a list of [inputs, labels]
-    inputs, ground_truths = data
-    predictions = net(inputs)
-    batch_loss = torch.eq(predictions.argmax(dim=1), ground_truths.argmax(dim=0)).float()
-    loss = np.append(loss, batch_loss.detach().numpy())
-accuracy = 1.0 - np.mean(loss.flatten())
-print(f"Across {len(testloader) * batch_size} test images, accuracy is {accuracy:.2%}")
-
-# -
-
 # ## Review
 #
 # Although neural networks essentially consist of huge numbers of weights interconnecting layers, it's impossible to diagram the interconnections. Instead, neural networks are discussed using block diagrams, with the connections implied.
@@ -482,8 +457,6 @@ print(f"Across {len(testloader) * batch_size} test images, accuracy is {accuracy
 #
 # By the time you're more than a handful of layers in, most of the pixels in the input have _something_ to do with the activation of every node in a layer. This makes it very difficult to audit a neural model to make sure it's making predictions "the right way," or "using the right data." This is known as the **Interpretability Problem.**
 
-# In the case of MNIST, the convolutional neural network performs with essentially the same accuracy as the 3-layer neural network: generally achieving 92-93% accuracy. This is despite having fewer than 10% of the weights, which effectively means using much less memory. On the other hand, this deeper neural network trains a little slower, as convolving (sliding the window) is an inner loop that has to happen (even if we don't have to explicitly write the code). The depth also means that the code has a little less **cache coherence**, which is a factor in performance tuning.
 #
-# Pragmatically, the weight/memory savings *vastly* outweighs the slight speed hit. Convolutional neural networks are the standard architecture for neural network-based vision applications.
 
 

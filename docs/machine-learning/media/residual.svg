@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 881 420.73">
+  <defs>
+    <style>
+      .cls-1 {
+        font-family: MyriadPro-Regular, 'Myriad Pro';
+        font-size: 48px;
+      }
+
+      .cls-2, .cls-3 {
+        stroke: #000;
+        stroke-miterlimit: 10;
+      }
+
+      .cls-2, .cls-4 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        fill: none;
+      }
+
+      .cls-5 {
+        opacity: .4;
+      }
+
+      .cls-6 {
+        opacity: .55;
+      }
+
+      .cls-7, .cls-8, .cls-4, .cls-9 {
+        stroke-width: 0px;
+      }
+
+      .cls-8 {
+        fill: #2cafff;
+      }
+
+      .cls-9 {
+        fill: aqua;
+      }
+    </style>
+  </defs>
+  <g>
+    <polygon class="cls-4" points=".5 146.22 199.5 10.13 199.5 211.69 .5 347.78 .5 146.22"/>
+    <path class="cls-7" d="m199,11.08v200.35L1,346.83v-200.35L199,11.08m1-1.9L0,145.95v202.77l200-136.77V9.18h0Z"/>
+  </g>
+  <g>
+    <line class="cls-4" x1="100" y1="176.63" x2="322" y2="167.45"/>
+    <g>
+      <line class="cls-3" x1="100" y1="176.63" x2="315.97" y2="167.7"/>
+      <path class="cls-7" d="m322,167.45c-2.79,1.17-6.24,3.11-8.34,5.11l1.52-4.82-1.92-4.68c2.26,1.81,5.86,3.46,8.74,4.4Z"/>
+    </g>
+  </g>
+  <g class="cls-5">
+    <polygon class="cls-9" points="222.5 135.17 421.5 .94 421.5 199.73 222.5 333.96 222.5 135.17"/>
+    <path class="cls-7" d="m421,1.88v197.59l-198,133.55v-197.59L421,1.88m1-1.88l-200,134.9v200l200-134.9V0h0Z"/>
+  </g>
+  <g>
+    <polygon class="cls-4" points="681.5 157.53 880.5 23.31 880.5 222.1 681.5 356.33 681.5 157.53"/>
+    <path class="cls-7" d="m880,24.25v197.59l-198,133.55v-197.59L880,24.25m1-1.88l-200,134.9v200l200-134.9V22.37h0Z"/>
+  </g>
+  <g class="cls-6">
+    <polygon class="cls-8" points="298.5 159.84 344.5 128.81 344.5 174.61 298.5 205.64 298.5 159.84"/>
+    <path class="cls-7" d="m344,129.76v44.59l-45,30.35v-44.59l45-30.35m1-1.88l-47,31.7v47l47-31.7v-47h0Z"/>
+  </g>
+  <g>
+    <polygon class="cls-8" points="758.5 164.84 804.5 133.82 804.5 179.61 758.5 210.64 758.5 164.84"/>
+    <path class="cls-7" d="m804,134.76v44.59l-45,30.35v-44.59l45-30.35m1-1.88l-47,31.7v47l47-31.7v-47h0Z"/>
+  </g>
+  <g>
+    <line class="cls-8" x1="781.5" y1="172.23" x2="334.5" y2="162.23"/>
+    <g>
+      <line class="cls-3" x1="775.47" y1="172.09" x2="334.5" y2="162.23"/>
+      <path class="cls-7" d="m781.5,172.23c-2.82-1.12-6.3-2.99-8.44-4.95l1.61,4.79-1.83,4.72c2.23-1.85,5.79-3.57,8.65-4.56Z"/>
+    </g>
+  </g>
+  <g>
+    <polyline class="cls-3" points="100 280.41 100 375.73 537.5 375.73 537.5 197.76"/>
+    <path class="cls-7" d="m537.5,191.73c1.05,2.84,2.85,6.36,4.76,8.55l-4.76-1.72-4.75,1.72c1.9-2.18,3.7-5.71,4.75-8.55Z"/>
+  </g>
+  <circle class="cls-2" cx="537.5" cy="167.23" r="25"/>
+  <text class="cls-1" transform="translate(522 178.73)"><tspan x="0" y="0">+</tspan></text>
+</svg>
