@@ -49,7 +49,7 @@ import time
 #
 # You'll see that, just as we defined a new class for our Xor network and our 3-layer MNIST network, we're doing the same here. 
 #
-# To make the code a little shorter, I define `conv1` and `conv2` as layers that themselves each have a convolutional layer (`Conv2d`), use the `ReLU` activation function, and a pooling layer (`MaxPool2D`). Creating **blocks** like this that internally have layers and which, in turn, you layer with other blocks, is how deep-learning **architectures** are built. 
+# To make the code a little shorter, I define `conv1` and `conv2` as **blocks** that themselves each have a convolutional layer (`Conv2d`), use the `ReLU` activation function, and a pooling layer (`MaxPool2D`). Creating blocks like this that internally have layers and which, in turn, you layer with other blocks, is how deep-learning **architectures** are built. 
 #
 # ### Parameters to `Conv2d`
 #
