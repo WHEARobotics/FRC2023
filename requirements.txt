@@ -20,7 +20,7 @@ pyntcore==2024.1.1.0
 pytest==7.2.1
 pytest-reraise==2.1.2
 robotpy==2024.1.1
-robotpy-apriltag==2023.3.2.1
+robotpy-apriltag==2024.1.1.0
 robotpy-cli==2024.0.0
 robotpy-hal==2024.1.1.0
 robotpy-halsim-gui==2024.1.1.0
