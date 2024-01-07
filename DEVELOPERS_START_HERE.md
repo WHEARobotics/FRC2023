@@ -76,9 +76,9 @@ Run `python --version`. Expected result: `Python 3.10.0`
 
 Switch to the **robot/** subdirectory of **src/helloworld/** and run:
 
-    python hello_robot.py sim
+    robotpy --main hello_robot.py sim
 
-You're asking the Python interpreter to run the program **hello_robot.py** in simulator mode. 
+You're asking the robotpy program to run the program **hello_robot.py** in simulator mode. 
 
 You should see a command-line output similar to:
 
@@ -116,7 +116,7 @@ And a "Robot Simulation" Window to appear. Close the simulation window to end th
 
 Switch to the **src/helloworld/apriltags** directory and run:
 
-    python hello_apriltag.py
+    python hello_apriltags.py 
 
 Expected output: `Yeah, that worked.`
 
