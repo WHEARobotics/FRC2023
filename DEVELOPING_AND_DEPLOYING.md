@@ -38,6 +38,7 @@ Check the robot:
 4. Check your code again.  Are there any spelling errors?
 5. If you are using a different computer from PLTW1 to write code, also connect that computer's Wi-Fi to the access point on the robot (access point name 3881).
 
+TODO 2024-06-07: I think this is wrong now. I think you need to use `robotpy` command. 
 Deploy your code:
 ```python robot.py deploy```
 
